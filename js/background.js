@@ -8,16 +8,16 @@
  * - Toolbar icon state management
  */
 
-console.log("[OpenPGP Background] Background script initializing");
+logger.log("OpenPGP Background", "Background script initializing");
 
 /**
  * Browser action (toolbar icon) click handler
  * Opens the sidebar when the toolbar icon is clicked
  */
 browser.browserAction.onClicked.addListener(() => {
-  console.log("[OpenPGP Background] Toolbar icon clicked, opening sidebar");
+  logger.log("OpenPGP Background", "Toolbar icon clicked, opening sidebar");
   browser.sidebarAction.open().catch((err) => {
-    console.error("[OpenPGP Background] Failed to open sidebar:", err);
+    logger.error("OpenPGP Background", "Failed to open sidebar:", err);
   });
 });
 
@@ -25,24 +25,26 @@ browser.browserAction.onClicked.addListener(() => {
  * Extension installation/update handler
  */
 browser.runtime.onInstalled.addListener((details) => {
-  console.log("[OpenPGP Background] Extension installed/updated", details);
+  logger.log("OpenPGP Background", "Extension installed/updated", details);
 
   if (details.reason === "install") {
-    console.log("[OpenPGP Background] First time installation");
+    logger.log("OpenPGP Background", "First time installation");
 
     // Set default settings
     browser.storage.local.set({
       debugMode: true,
       version: "2.2.5",
+      firegpg_install_date: Date.now(),
     });
 
     // Open sidebar on installation
     browser.sidebarAction.open().catch((err) => {
-      console.error("[OpenPGP Background] Failed to open sidebar:", err);
+      logger.error("OpenPGP Background", "Failed to open sidebar:", err);
     });
   } else if (details.reason === "update") {
-    console.log(
-      "[OpenPGP Background] Extension updated from",
+    logger.log(
+      "OpenPGP Background",
+      "Extension updated from",
       details.previousVersion,
     );
   }
@@ -52,9 +54,20 @@ browser.runtime.onInstalled.addListener((details) => {
  * Browser startup handler — lock master password in all sidebar instances
  */
 browser.runtime.onStartup.addListener(() => {
-  console.log("[OpenPGP Background] Browser started, extension active");
+  logger.log("OpenPGP Background", "Browser started, extension active");
   // In-memory master password cannot survive a browser restart; notify sidebar just in case
   browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => {});
+
+  // Ensure install date is recorded for users upgrading from older versions
+  browser.storage.local.get("firegpg_install_date").then((result) => {
+    if (!result.firegpg_install_date) {
+      browser.storage.local.set({ firegpg_install_date: Date.now() });
+      logger.log(
+        "OpenPGP Background",
+        "Install date set for existing user (upgrade fallback)",
+      );
+    }
+  });
 });
 
 /**
@@ -62,8 +75,9 @@ browser.runtime.onStartup.addListener(() => {
  * Allows content scripts and sidebar to communicate
  */
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(
-    "[OpenPGP Background] Message received:",
+  logger.log(
+    "OpenPGP Background",
+    "Message received:",
     message.type || message,
   );
 
@@ -71,22 +85,22 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case "ping":
       // Simple ping/pong for connection testing
-      console.log("[OpenPGP Background] Ping received, sending pong");
+      logger.log("OpenPGP Background", "Ping received, sending pong");
       sendResponse({ success: true, message: "pong" });
       break;
 
     case "getKeys":
       // Request to get all keys (could be from content script)
-      console.log("[OpenPGP Background] Keys requested");
+      logger.log("OpenPGP Background", "Keys requested");
       browser.storage.local
         .get("MiniPGP_keys")
         .then((result) => {
           const keys = result.MiniPGP_keys || [];
-          console.log("[OpenPGP Background] Sending", keys.length, "keys");
+          logger.log("OpenPGP Background", "Sending", keys.length, "keys");
           sendResponse({ success: true, keys });
         })
         .catch((error) => {
-          console.error("[OpenPGP Background] Error getting keys:", error);
+          logger.error("OpenPGP Background", "Error getting keys:", error);
           sendResponse({ success: false, error: error.message });
         });
       // Return true to indicate async response
@@ -94,23 +108,24 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "openSidebar":
       // Request to open the sidebar
-      console.log("[OpenPGP Background] Opening sidebar");
+      logger.log("OpenPGP Background", "Opening sidebar");
       browser.sidebarAction
         .open()
         .then(() => {
-          console.log("[OpenPGP Background] Sidebar opened");
+          logger.log("OpenPGP Background", "Sidebar opened");
           sendResponse({ success: true });
         })
         .catch((error) => {
-          console.error("[OpenPGP Background] Error opening sidebar:", error);
+          logger.error("OpenPGP Background", "Error opening sidebar:", error);
           sendResponse({ success: false, error: error.message });
         });
       return true;
 
     case "lockMasterPassword":
       // Another component requesting a lock (e.g. suspend)
-      console.log(
-        "[OpenPGP Background] Forwarding lockMasterPassword to sidebar",
+      logger.log(
+        "OpenPGP Background",
+        "Forwarding lockMasterPassword to sidebar",
       );
       // Just acknowledge — pgpHandler in the sidebar page handles the actual lock
       sendResponse({ success: true });
@@ -118,12 +133,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "log":
       // Remote logging from content scripts
-      console.log("[OpenPGP Background] Content script log:", message.message);
+      logger.log("OpenPGP Background", "Content script log:", message.message);
       sendResponse({ success: true });
       break;
 
     default:
-      console.warn("[OpenPGP Background] Unknown message type:", message.type);
+      logger.warn("OpenPGP Background", "Unknown message type:", message.type);
       sendResponse({ success: false, error: "Unknown message type" });
   }
 });
@@ -139,13 +154,15 @@ browser.contextMenus.create(
   },
   () => {
     if (browser.runtime.lastError) {
-      console.error(
-        "[OpenPGP Background] Context menu creation failed:",
+      logger.error(
+        "OpenPGP Background",
+        "Context menu creation failed:",
         browser.runtime.lastError,
       );
     } else {
-      console.log(
-        "[OpenPGP Background] Context menu created: encrypt-selection",
+      logger.log(
+        "OpenPGP Background",
+        "Context menu created: encrypt-selection",
       );
     }
   },
@@ -159,13 +176,15 @@ browser.contextMenus.create(
   },
   () => {
     if (browser.runtime.lastError) {
-      console.error(
-        "[OpenPGP Background] Context menu creation failed:",
+      logger.error(
+        "OpenPGP Background",
+        "Context menu creation failed:",
         browser.runtime.lastError,
       );
     } else {
-      console.log(
-        "[OpenPGP Background] Context menu created: decrypt-selection",
+      logger.log(
+        "OpenPGP Background",
+        "Context menu created: decrypt-selection",
       );
     }
   },
@@ -179,13 +198,15 @@ browser.contextMenus.create(
   },
   () => {
     if (browser.runtime.lastError) {
-      console.error(
-        "[OpenPGP Background] Context menu creation failed:",
+      logger.error(
+        "OpenPGP Background",
+        "Context menu creation failed:",
         browser.runtime.lastError,
       );
     } else {
-      console.log(
-        "[OpenPGP Background] Context menu created: verify-selection",
+      logger.log(
+        "OpenPGP Background",
+        "Context menu created: verify-selection",
       );
     }
   },
@@ -195,11 +216,11 @@ browser.contextMenus.create(
  * Context menu click handler
  */
 browser.contextMenus.onClicked.addListener((info, tab) => {
-  console.log("[OpenPGP Background] Context menu clicked:", info.menuItemId);
+  logger.log("OpenPGP Background", "Context menu clicked:", info.menuItemId);
 
   switch (info.menuItemId) {
     case "OpenPGP-encrypt-selection":
-      console.log("[OpenPGP Background] Encrypt selection requested");
+      logger.log("OpenPGP Background", "Encrypt selection requested");
       // Open sidebar and send selected text
       browser.sidebarAction.open().then(() => {
         // Send message to sidebar to prefill encryption form
@@ -210,13 +231,13 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
             text: info.selectionText,
           })
           .catch((err) => {
-            console.log("[OpenPGP Background] Sidebar not ready yet:", err);
+            logger.log("OpenPGP Background", "Sidebar not ready yet:", err);
           });
       });
       break;
 
     case "OpenPGP-decrypt-selection":
-      console.log("[OpenPGP Background] Decrypt selection requested");
+      logger.log("OpenPGP Background", "Decrypt selection requested");
       browser.sidebarAction.open().then(() => {
         browser.runtime
           .sendMessage({
@@ -224,13 +245,13 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
             text: info.selectionText,
           })
           .catch((err) => {
-            console.log("[OpenPGP Background] Sidebar not ready yet:", err);
+            logger.log("OpenPGP Background", "Sidebar not ready yet:", err);
           });
       });
       break;
 
     case "OpenPGP-verify-selection":
-      console.log("[OpenPGP Background] Verify selection requested");
+      logger.log("OpenPGP Background", "Verify selection requested");
       browser.sidebarAction.open().then(() => {
         browser.runtime
           .sendMessage({
@@ -238,7 +259,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
             text: info.selectionText,
           })
           .catch((err) => {
-            console.log("[OpenPGP Background] Sidebar not ready yet:", err);
+            logger.log("OpenPGP Background", "Sidebar not ready yet:", err);
           });
       });
       break;
@@ -249,16 +270,16 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
  * Browser action (toolbar icon) click handler
  */
 browser.browserAction.onClicked.addListener((tab) => {
-  console.log("[OpenPGP Background] Toolbar icon clicked");
+  logger.log("OpenPGP Background", "Toolbar icon clicked");
 
   // Toggle sidebar
   browser.sidebarAction
     .toggle()
     .then(() => {
-      console.log("[OpenPGP Background] Sidebar toggled");
+      logger.log("OpenPGP Background", "Sidebar toggled");
     })
     .catch((err) => {
-      console.error("[OpenPGP Background] Failed to toggle sidebar:", err);
+      logger.error("OpenPGP Background", "Failed to toggle sidebar:", err);
     });
 });
 
@@ -267,25 +288,15 @@ browser.browserAction.onClicked.addListener((tab) => {
  */
 browser.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "local") {
-    console.log("[OpenPGP Background] Storage changed:", Object.keys(changes));
-
-    // Log debug mode changes
-    if (changes.debugMode) {
-      console.log(
-        "[OpenPGP Background] Debug mode changed to:",
-        changes.debugMode.newValue,
-      );
-    }
+    logger.log("OpenPGP Background", "Storage changed:", Object.keys(changes));
 
     // Log when keys are modified
     if (changes.MiniPGP_keys) {
       const oldCount = changes.MiniPGP_keys.oldValue?.length || 0;
       const newCount = changes.MiniPGP_keys.newValue?.length || 0;
-      console.log(
-        "[OpenPGP Background] Keys count changed from",
-        oldCount,
-        "to",
-        newCount,
+      logger.log(
+        "OpenPGP Background",
+        `Keys count changed from ${oldCount} to ${newCount}`,
       );
     }
   }
@@ -295,8 +306,9 @@ browser.storage.onChanged.addListener((changes, areaName) => {
  * Handle extension errors
  */
 browser.runtime.onSuspend.addListener(() => {
-  console.log(
-    "[OpenPGP Background] Extension suspending — locking master password",
+  logger.log(
+    "OpenPGP Background",
+    "Extension suspending — locking master password",
   );
   browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => {});
 });
@@ -305,19 +317,10 @@ browser.runtime.onSuspend.addListener(() => {
  * Periodic health check
  */
 setInterval(() => {
-  browser.storage.local.get(["debugMode", "MiniPGP_keys"]).then((result) => {
+  browser.storage.local.get("MiniPGP_keys").then((result) => {
     const keyCount = result.MiniPGP_keys?.length || 0;
-    const debugMode = result.debugMode || false;
-
-    if (debugMode) {
-      console.log(
-        "[OpenPGP Background] Health check - Keys:",
-        keyCount,
-        "Debug:",
-        debugMode,
-      );
-    }
+    logger.log("OpenPGP Background", `Health check — Keys: ${keyCount}`);
   });
 }, 300000); // Every 5 minutes
 
-console.log("[OpenPGP Background] Background script initialized successfully");
+logger.log("OpenPGP Background", "Background script initialized successfully");

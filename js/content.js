@@ -15,6 +15,21 @@ console.log(
   window.location.href,
 );
 
+// Storage-based debug/verbose state — content scripts read storage directly
+let _debugEnabled = false;
+let _verboseEnabled = false;
+
+browser.storage.local.get(["debugMode", "verboseMode"]).then((r) => {
+  _debugEnabled = r.debugMode ?? false;
+  _verboseEnabled = r.verboseMode ?? false;
+});
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if ("debugMode" in changes) _debugEnabled = changes.debugMode.newValue;
+  if ("verboseMode" in changes) _verboseEnabled = changes.verboseMode.newValue;
+});
+
 /**
  * Configuration
  */
@@ -36,12 +51,14 @@ const CONFIG = {
 };
 
 /**
- * Debug logger that sends logs to background script
+ * Debug logger that sends logs to background script (gated by debugMode).
  *
  * @param {string} message - Message to log
  * @param {*} data - Optional data
  */
 function debugLog(message, data = null) {
+  if (!_debugEnabled) return;
+
   console.log(`[OpenPGP Content] ${message}`, data || "");
 
   // Also send to background script for centralized logging

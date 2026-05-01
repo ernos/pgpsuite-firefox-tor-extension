@@ -10,34 +10,23 @@
  * Uses OpenPGP.js library for all cryptographic operations
  */
 
-// Debug logging flag - can be toggled from UI
-let DEBUG_MODE = false;
-
 /**
- * Debug logger that only outputs when DEBUG_MODE is enabled
- * @param {string} message - The message to log
- * @param {*} data - Optional data to log alongside the message
+ * Thin wrappers so existing call-sites need no changes.
+ * Delegates to the shared logger loaded before this script.
  */
 function debugLog(message, data = null) {
-  if (DEBUG_MODE) {
-    const timestamp = new Date().toISOString();
-    console.log(`[OpenPGP Debug ${timestamp}] ${message}`);
-    if (data !== null) {
-      console.log(data);
-    }
+  if (data !== null) {
+    logger.log("OpenPGP", message, data);
+  } else {
+    logger.log("OpenPGP", message);
   }
 }
 
-/**
- * Error logger - always outputs regardless of DEBUG_MODE
- * @param {string} message - The error message
- * @param {Error} error - The error object
- */
 function errorLog(message, error = null) {
-  const timestamp = new Date().toISOString();
-  console.error(`[OpenPGP Error ${timestamp}] ${message}`);
-  if (error) {
-    console.error(error);
+  if (error !== null) {
+    logger.error("OpenPGP", message, error);
+  } else {
+    logger.error("OpenPGP", message);
   }
 }
 
@@ -52,32 +41,6 @@ class PGPHandler {
     this.PUBLIC_KEYS_STORAGE_KEY = "MiniPGP_public_keys";
     this.MASTER_VERIFY_KEY = "MiniPGP_master_verify";
     this._masterPassword = null;
-  }
-
-  /**
-   * Toggle debug mode on/off
-   * @param {boolean} enabled - Whether to enable debug mode
-   */
-  setDebugMode(enabled) {
-    DEBUG_MODE = enabled;
-    debugLog(`Debug mode ${enabled ? "enabled" : "disabled"}`);
-    // Save preference to storage
-    browser.storage.local.set({ debugMode: enabled });
-  }
-
-  /**
-   * Load debug mode preference from storage
-   */
-  async loadDebugMode() {
-    try {
-      const result = await browser.storage.local.get("debugMode");
-      if (result.debugMode !== undefined) {
-        DEBUG_MODE = result.debugMode;
-        debugLog("Debug mode loaded from storage", DEBUG_MODE);
-      }
-    } catch (error) {
-      errorLog("Failed to load debug mode preference", error);
-    }
   }
 
   // ===== Master Password Protection =====
@@ -1277,8 +1240,5 @@ class PGPHandler {
 // Create global instance
 debugLog("Creating global PGPHandler instance");
 const pgpHandler = new PGPHandler();
-
-// Load debug mode preference on startup
-pgpHandler.loadDebugMode();
 
 debugLog("PGP Handler module loaded");

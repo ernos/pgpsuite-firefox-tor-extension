@@ -63,7 +63,7 @@ if [ -f "$index" ]; then
 else
   warn "${MAGENTA}Could not update __VERSION__ in \"$index\" since it doesn't exist${NC}"
 fi
-ZIPFILE="OpenPGP v$version for Firefox - Full PGP⁄ and PGP support.xpi"
+ZIPFILE="PGP Suite – Encrypt Messages & Files v$version.xpi"
 ok "${B}Creating XPI File: ${C}$FILENAME${NC}"
 cp $manitemplate $manifest
 sed "s/__VERSION__/$version/g" "$manifest" > $manitemp

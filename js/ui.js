@@ -5,7 +5,7 @@
  * the HTML elements to the PGP handler functionality
  */
 
-console.log("[OpenPGP UI] Initializing UI controller");
+logger.log("OpenPGP UI", "Initializing UI controller");
 
 // Module-level reference set during DOMContentLoaded so TabManager can reach it
 let fileController;
@@ -78,7 +78,7 @@ function passwordPrompt(title, message = "") {
  * @param {string} type - Message type: 'success', 'error', 'info', 'warning'
  */
 function showStatus(element, message, type = "info") {
-  console.log(`[OpenPGP UI] Status (${type}):`, message);
+  logger.log("OpenPGP UI", `Status (${type}):`, message);
 
   element.textContent = message;
   element.className = `status status-${type}`;
@@ -114,7 +114,7 @@ function setVisible(element, visible) {
  */
 class TabManager {
   constructor() {
-    console.log("[OpenPGP UI] Initializing tab manager");
+    logger.log("OpenPGP UI", "Initializing tab manager");
 
     this.tabButtons = document.querySelectorAll(".tab-button");
     this.tabContents = document.querySelectorAll(".tab-content");
@@ -133,7 +133,7 @@ class TabManager {
    * @param {string} tabName - Name of tab to switch to
    */
   switchTab(tabName) {
-    console.log("[OpenPGP UI] Switching to tab:", tabName);
+    logger.log("OpenPGP UI", "Switching to tab:", tabName);
 
     // Deactivate all tabs
     this.tabButtons.forEach((btn) => btn.classList.remove("active"));
@@ -164,7 +164,7 @@ class TabManager {
    * Refresh all key selection dropdowns
    */
   async refreshKeyDropdowns() {
-    console.log("[OpenPGP UI] Refreshing key dropdowns");
+    logger.log("OpenPGP UI", "Refreshing key dropdowns");
 
     const keys = await pgpHandler.getAllKeys();
 
@@ -202,7 +202,7 @@ class TabManager {
  */
 class KeyManagement {
   constructor() {
-    console.log("[OpenPGP UI] Initializing key management");
+    logger.log("OpenPGP UI", "Initializing key management");
 
     // Get DOM elements
     this.generateBtn = document.getElementById("generateKeyBtn");
@@ -562,7 +562,7 @@ class KeyManagement {
 
         try {
           await navigator.clipboard.writeText(text);
-          console.log(`[OpenPGP UI] ${targetId} copied to clipboard`);
+          logger.log("OpenPGP UI", `${targetId} copied to clipboard`);
 
           // Visual feedback
           btn.classList.add("copied");
@@ -592,7 +592,7 @@ class KeyManagement {
             btn.textContent = "📋";
           }, 2000);
         } catch (err) {
-          console.error("[OpenPGP UI] Copy failed:", err);
+          logger.error("OpenPGP UI", "Copy failed:", err);
           textarea.select();
         }
       });
@@ -603,7 +603,7 @@ class KeyManagement {
    * Generate a new key pair
    */
   async generateKey() {
-    console.log("[OpenPGP UI] Generate key button clicked");
+    logger.log("OpenPGP UI", "Generate key button clicked");
 
     const statusEl = document.getElementById("keyGenerationStatus");
     const name = document.getElementById("keyName").value.trim();
@@ -630,7 +630,7 @@ class KeyManagement {
     this.generateBtn.disabled = true;
 
     try {
-      console.log("[OpenPGP UI] Calling PGP handler to generate key");
+      logger.log("OpenPGP UI", "Calling PGP handler to generate key");
 
       // Generate the key
       const result = await pgpHandler.generateKey({
@@ -641,7 +641,7 @@ class KeyManagement {
       });
 
       if (result.success) {
-        console.log("[OpenPGP UI] Key generated successfully");
+        logger.log("OpenPGP UI", "Key generated successfully");
         showStatus(
           statusEl,
           `Key pair generated successfully! Fingerprint: ${result.fingerprint}`,
@@ -655,13 +655,15 @@ class KeyManagement {
 
         // Refresh keys list
         await this.refreshKeys();
+        incrementUsageCount();
       } else {
-        console.error("[OpenPGP UI] Key generation failed:", result.error);
+        logger.error("OpenPGP UI", "Key generation failed:", result.error);
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error(
-        "[OpenPGP UI] Unexpected error during key generation:",
+      logger.error(
+        "OpenPGP UI",
+        "Unexpected error during key generation:",
         error,
       );
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
@@ -674,36 +676,34 @@ class KeyManagement {
    * Refresh the keys list display
    */
   async refreshKeys() {
-    console.log("[OpenPGP UI] Refreshing keys list");
+    logger.log("OpenPGP UI", "Refreshing keys list");
 
     try {
       const keys = await pgpHandler.getAllKeys();
 
-      console.log("[OpenPGP UI] Found", keys.length, "keys");
-
-      /*
-      MiniPGP_keys:"[{"name":"asd","email":"asd@asd.asd","privateKey":{"e":"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","s":"09K8ik/cENOJ08BVNW8AMA==","i":"arwlAR27B3Lq51IO"},"publicKey":"-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxsBNBGnarwEBCAC+rkknpH+MkwBEddIIPlGqji62MCMdhDNy8mZN6l3wEv7c\nLDE5YA/jTHpuhHvtPyiYiJBXHRu3sO6JNOomFo17MkhAC7n/Byet8N1AxVxi\niQJY5FfaN6kcUZR8o3tEhlxdxkNQ2PgJtAZlcG6wcox6MahsfqxZTxOyiFHO\n/nHTqWEtouGJIJJwICmCaA6PpZV7Czhe4Bogh/ozGA/CjTPadUCZs+a0B1j7\njUav90FDn3ZIEsNz6KOeNQGceW4cLLl+T0WvRbJQ+F6nJu+rbxlzN6WF6T46\nYrjjSDZvhaQX7mj9YgssTsfN19NRajt0+w4fnqkhCCeE+1SEgVs+a1OPABEB\nAAHNEWFzZCA8YXNkQGFzZC5hc2Q+wsCKBBABCAA+BYJp2q8BBAsJBwgJkFKz\n4gOYaf4tAxUICgQWAAIBAhkBApsDAh4BFiEERNbJzbuknnqmDnYrUrPiA5hp\n/i0AAPBnCAChYTQM5yvTGZuqXzvJ0zrjOII6NZu5DiBX/9yMKqyiO4+HlogU\nL21sIv4ECzVadVxVpwx/b7A3nKqj51NUZitbNQX2urQd0p+rFRwzneV4bpYO\nxpdqg/kUrNJmu9eViY595rtOC3ZHHa06m4b4jSfRYVkyYrJEnsJHbtA/foVr\nF3zhQ+Y2WCaNDzOVEHmsFi4MP+Uv+BRSq22fSf6J4galJH8waUNU6/j/XN/x\n/jb9mh0/yiNOoZ5+89CTsfkFOadxSb6jsSZTPDdYoVCd/0VRnAegrf0/ZOiF\n/p7/QNpyZtbU23jnr6A8gaEcmTOI1rvHrwHDKJO7aoU4+iFFMjGpzsBNBGna\nrwEBCADea9uVsp0BMnBIbmtIDPp2Kd/41yQsMdCD+VGrQsEbm7fWfTAZ4KKt\n2syuU6f9qVDTyDSKylcFy8nMznVBfGqsnAkgLW1Ol/M7k2KcuIRDPwSImtC0\nBIwW9Jqe94HNqTaBS1CSuRFYIrVTTUmkgZCXVKTx6bx1yz9azOYEm/oyV/eS\n4wBjFVh0BEH7c89ihhXbIZ4LiOedkxvOrdmPz0OzSxWupwrXKi0Iuujsur/2\n4V+P3NfMFFMjY/I5hz0c+6TOXf1phvoLykVf6V3ZiwDz9IjwxUqywuB9fnKV\nbZuW0ofo9dbFphgZXK7IUez/kUXRPMwEB526sRmvD91QbxslABEBAAHCwHYE\nGAEIACoFgmnarwEJkFKz4gOYaf4tApsMFiEERNbJzbuknnqmDnYrUrPiA5hp\n/i0AAKvkCACmomzmVF/nxe6WQNMbbwQQECVMT1iwmNYYpqzrxyHZS+U8IOrA\nIghk8xLRuS2k3aFEvFHaHIRv8H1UX1/bSKQqTvH812gr4OkP73yF0c4D8t6K\nyFXUsoy2KhKLdDwwNYDJN147+6eyFnWrtS8hwFBxKIVRaQy4VBVeglqlCSFu\nuczquE1PP/GORTlxgHxb1Gh3mLurIgAjXFJUpDAFAMMfy3r71FYErwCy9zsT\nYXhIv0lt0dAx6mrD4H8i2kKdnn/YNH5vOJU5lYPKTJROlEZqRcmLWt7AVTn/\nMNSnuw2YX0UXo4mE663vCKqCcJmPJSpWtTP9DaibiagAtc/mcicw\n=+90K\n-----END PGP PUBLIC KEY BLOCK-----\n","fingerprint":"44d6c9cdbba49e7aa60e762b52b3e2039869fe2d","keyID":"52b3e2039869fe2d","created":"2026-04-11T20:28:49.908Z","revocationCertificate":"-----BEGIN PGP PUBLIC KEY BLOCK-----\nComment: This is a revocation certificate\n\nwsB2BCABCAAqBYJp2q8BCZBSs+IDmGn+LQKdABYhBETWyc27pJ56pg52K1Kz\n4gOYaf4tAAAkiQf/Ur+/1aSviGx77N4/Ed0ga+QSNXC9oB5fLmgWegUStrhK\nTpzeCaylGkoyo9XmJs2dcnKj43X3Gu48LmDWDzVHJPsVrtqHuiQXku4pLSnx\ns05YqGuG7D4bkBLRAhDsOebmKS/Ov6YMag589ezGN/f0QYm1SkvQeTTnl7SA\ndmPFTePOlxfWA2u1JM2hFa1Id5+hqnKzWdYp8N5F5Ar5cZ16fVCllIEzvb4d\nxsJuhcYqdA7xGcCg1X+ltevzFAtRu9+9wFxfDSwPM9T9jkeFAZdElO2gQ1vb\nZWohdDzB+deXEsaZjqMTuRGrFAGQT/Xiia4e2y31bCOM9DAtYiow9DzJig==\n=ExAT\n-----END PGP PUBLIC KEY BLOCK-----\n","privateKeyEncrypted":true}]"
-      MiniPGP_master_verify:"{"e":"87HRqvFH1z12JM+sFwXm6Q1wpIow3Y6yuBzIH6xXfKNleg==","s":"90GAkN11SWECYHc1X9ZH6Q==","i":"M31mZSFQwyvmGBB6"}"
-      */
+      logger.log("OpenPGP UI", "Found", keys.length, "keys");
 
       // Check if master password protection is enabled
       const masterPasswordRequired =
         await pgpHandler.isMasterPasswordRequired();
       const masterPasswordUnlocked = pgpHandler.isMasterPasswordUnlocked();
 
-      console.log(
-        "[OpenPGP UI] Master password required:",
+      logger.log(
+        "OpenPGP UI",
+        "Master password required:",
         masterPasswordRequired,
       );
-      console.log(
-        "[OpenPGP UI] Master password unlocked:",
+      logger.log(
+        "OpenPGP UI",
+        "Master password unlocked:",
         masterPasswordUnlocked,
       );
 
       // If master password is required but not unlocked, show unlock prompt
       if (masterPasswordRequired && !masterPasswordUnlocked) {
-        console.log(
-          "[OpenPGP UI] Keys are encrypted - master password required",
+        logger.log(
+          "OpenPGP UI",
+          "Keys are encrypted - master password required",
         );
         setVisible(document.getElementById("masterPasswordBanner"), true);
         this.keysList.innerHTML =
@@ -716,12 +716,14 @@ class KeyManagement {
 
       // Keys are either not encrypted, or master password is unlocked
       if (!masterPasswordRequired) {
-        console.log(
-          "[OpenPGP UI] Keys are NOT encrypted - displaying directly",
+        logger.log(
+          "OpenPGP UI",
+          "Keys are NOT encrypted - displaying directly",
         );
       } else {
-        console.log(
-          "[OpenPGP UI] Master password unlocked - displaying decrypted keys",
+        logger.log(
+          "OpenPGP UI",
+          "Master password unlocked - displaying decrypted keys",
         );
       }
 
@@ -781,7 +783,7 @@ class KeyManagement {
         });
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Error refreshing keys:", error);
+      logger.error("OpenPGP UI", "Error refreshing keys:", error);
       this.keysList.innerHTML =
         '<p class="text-muted text-error">Error loading keys</p>';
     }
@@ -791,12 +793,12 @@ class KeyManagement {
    * Refresh and display imported public keys
    */
   async refreshPublicKeys() {
-    console.log("[OpenPGP UI] Refreshing public keys list");
+    logger.log("OpenPGP UI", "Refreshing public keys list");
 
     try {
       const publicKeys = await pgpHandler.getAllPublicKeys();
 
-      console.log("[OpenPGP UI] Found", publicKeys.length, "public keys");
+      logger.log("OpenPGP UI", "Found", publicKeys.length, "public keys");
 
       if (publicKeys.length === 0) {
         this.publickeysList.innerHTML =
@@ -853,15 +855,16 @@ class KeyManagement {
       this.updateEncryptPublicKeysDropdown();
       this.updateDecryptPublicKeysDropdown();
     } catch (error) {
-      console.error("[OpenPGP UI] Error refreshing public keys:", error);
+      logger.error("OpenPGP UI", "Error refreshing public keys:", error);
       this.publickeysList.innerHTML =
         '<p class="text-muted text-error">Error loading public keys</p>';
     }
   }
 
   async verifyRecipientsPublicKeyDropDown() {
-    console.log(
-      "[OpenPGP UI] Updating verify tab recipients public keys dropdown",
+    logger.log(
+      "OpenPGP UI",
+      "Updating verify tab recipients public keys dropdown",
     );
 
     try {
@@ -880,20 +883,21 @@ class KeyManagement {
         dropdown.appendChild(option);
       });
 
-      console.log(
-        "[OpenPGP UI] Verify Tab's Dropdown updated with",
+      logger.log(
+        "OpenPGP UI",
+        "Verify Tab's Dropdown updated with",
         publicKeys.length,
         "public keys",
       );
     } catch (error) {
-      console.error("[OpenPGP UI] Error updating verify tabs dropdown:", error);
+      logger.error("OpenPGP UI", "Error updating verify tabs dropdown:", error);
     }
   }
   /**
    * Update the encrypt tab public keys dropdown
    */
   async updateEncryptPublicKeysDropdown() {
-    console.log("[OpenPGP UI] Updating encrypt tab public keys dropdown");
+    logger.log("OpenPGP UI", "Updating encrypt tab public keys dropdown");
 
     try {
       const publicKeys = await pgpHandler.getAllPublicKeys();
@@ -911,13 +915,14 @@ class KeyManagement {
         dropdown.appendChild(option);
       });
 
-      console.log(
-        "[OpenPGP UI] Dropdown updated with",
+      logger.log(
+        "OpenPGP UI",
+        "Dropdown updated with",
         publicKeys.length,
         "public keys",
       );
     } catch (error) {
-      console.error("[OpenPGP UI] Error updating encrypt dropdown:", error);
+      logger.error("OpenPGP UI", "Error updating encrypt dropdown:", error);
     }
   }
 
@@ -925,7 +930,7 @@ class KeyManagement {
    * Update the decrypt tab public keys dropdown
    */
   async updateDecryptPublicKeysDropdown() {
-    console.log("[OpenPGP UI] Updating decrypt tab public keys dropdown");
+    logger.log("OpenPGP UI", "Updating decrypt tab public keys dropdown");
 
     try {
       const publicKeys = await pgpHandler.getAllPublicKeys();
@@ -943,20 +948,22 @@ class KeyManagement {
         dropdown.appendChild(option);
       });
 
-      console.log(
-        "[OpenPGP UI] Decrypt dropdown updated with",
+      logger.log(
+        "OpenPGP UI",
+        "Decrypt dropdown updated with",
         publicKeys.length,
         "public keys",
       );
     } catch (error) {
-      console.error("[OpenPGP UI] Error updating decrypt dropdown:", error);
+      logger.error("OpenPGP UI", "Error updating decrypt dropdown:", error);
     }
   }
 
   async encryptedText(fingerprint) {
     const textarea = document.getElementById("encryptedText");
-    console.log(
-      "[OpenPGP UI] Copied encryptedText to clipboard! Contents: '" +
+    logger.log(
+      "OpenPGP UI",
+      "Copied encryptedText to clipboard! Contents: '" +
         textarea.innerHTML +
         "'",
     );
@@ -970,7 +977,7 @@ class KeyManagement {
   async exportPublicKey(fingerprint) {
     const publicKey = await pgpHandler.exportPublicKey(fingerprint);
     if (publicKey) {
-      console.log("[OpenPGP UI] Exporting public key to textarea", fingerprint);
+      logger.log("OpenPGP UI", "Exporting public key to textarea", fingerprint);
 
       // Display key in textarea
       const textarea = document.getElementById("exportedPublicKey");
@@ -991,7 +998,7 @@ class KeyManagement {
    * @param {string} fingerprint - Key fingerprint
    */
   async exportPrivateKey(fingerprint) {
-    console.log("[OpenPGP UI] Exporting private key:", fingerprint);
+    logger.log("OpenPGP UI", "Exporting private key:", fingerprint);
 
     if (
       !confirm(
@@ -1022,7 +1029,7 @@ class KeyManagement {
    * @param {string} fingerprint - Key fingerprint
    */
   async deleteKey(fingerprint) {
-    console.log("[OpenPGP UI] Delete key requested:", fingerprint);
+    logger.log("OpenPGP UI", "Delete key requested:", fingerprint);
 
     if (
       !confirm(
@@ -1034,10 +1041,10 @@ class KeyManagement {
 
     try {
       await pgpHandler.deleteKey(fingerprint);
-      console.log("[OpenPGP UI] Key deleted successfully");
+      logger.log("OpenPGP UI", "Key deleted successfully");
       await this.refreshKeys();
     } catch (error) {
-      console.error("[OpenPGP UI] Error deleting key:", error);
+      logger.error("OpenPGP UI", "Error deleting key:", error);
       alert("Error deleting key: " + error.message);
     }
   }
@@ -1048,7 +1055,7 @@ class KeyManagement {
    * @param {string} fingerprint - Key fingerprint
    */
   async exportStoredPublicKey(fingerprint) {
-    console.log("[OpenPGP UI] Exporting stored public key:", fingerprint);
+    logger.log("OpenPGP UI", "Exporting stored public key:", fingerprint);
 
     try {
       const key = await pgpHandler.getPublicKeyByFingerprint(fingerprint);
@@ -1064,7 +1071,7 @@ class KeyManagement {
         outputDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Error exporting public key:", error);
+      logger.error("OpenPGP UI", "Error exporting public key:", error);
       alert("Error exporting public key: " + error.message);
     }
   }
@@ -1075,7 +1082,7 @@ class KeyManagement {
    * @param {string} fingerprint - Key fingerprint
    */
   async deletePublicKey(fingerprint) {
-    console.log("[OpenPGP UI] Delete public key requested:", fingerprint);
+    logger.log("OpenPGP UI", "Delete public key requested:", fingerprint);
 
     if (
       !confirm(
@@ -1087,10 +1094,10 @@ class KeyManagement {
 
     try {
       await pgpHandler.deletePublicKey(fingerprint);
-      console.log("[OpenPGP UI] Public key deleted successfully");
+      logger.log("OpenPGP UI", "Public key deleted successfully");
       await this.refreshPublicKeys();
     } catch (error) {
-      console.error("[OpenPGP UI] Error deleting public key:", error);
+      logger.error("OpenPGP UI", "Error deleting public key:", error);
       alert("Error deleting public key: " + error.message);
     }
   }
@@ -1099,7 +1106,7 @@ class KeyManagement {
    * Import a private key
    */
   async importKey() {
-    console.log("[OpenPGP UI] Import key button clicked");
+    logger.log("OpenPGP UI", "Import key button clicked");
 
     const statusEl = document.getElementById("importStatus");
     const keyText = document.getElementById("importKey").value.trim();
@@ -1122,13 +1129,13 @@ class KeyManagement {
         // Try to read as private key first
         await openpgp.readPrivateKey({ armoredKey: keyText });
         isPrivateKey = true;
-        console.log("[OpenPGP UI] Detected private key");
+        logger.log("OpenPGP UI", "Detected private key");
       } catch (e) {
         // If it fails, it might be a public key
         try {
           await openpgp.readKey({ armoredKey: keyText });
           isPrivateKey = false;
-          console.log("[OpenPGP UI] Detected public key");
+          logger.log("OpenPGP UI", "Detected public key");
         } catch (e2) {
           throw new Error("Invalid key format");
         }
@@ -1149,7 +1156,7 @@ class KeyManagement {
         result = await pgpHandler.importPrivateKey(keyText, passphrase);
 
         if (result.success) {
-          console.log("[OpenPGP UI] Private key imported successfully");
+          logger.log("OpenPGP UI", "Private key imported successfully");
           showStatus(
             statusEl,
             `Private key imported successfully! Fingerprint: ${result.fingerprint}`,
@@ -1161,8 +1168,9 @@ class KeyManagement {
 
           await this.refreshKeys();
         } else {
-          console.error(
-            "[OpenPGP UI] Private key import failed:",
+          logger.error(
+            "OpenPGP UI",
+            "Private key import failed:",
             result.error,
           );
           showStatus(statusEl, `Error: ${result.error}`, "error");
@@ -1172,7 +1180,7 @@ class KeyManagement {
         result = await pgpHandler.importPublicKey(keyText);
 
         if (result.success) {
-          console.log("[OpenPGP UI] Public key imported successfully");
+          logger.log("OpenPGP UI", "Public key imported successfully");
           showStatus(
             statusEl,
             `Public key imported successfully! Fingerprint: ${result.fingerprint}`,
@@ -1184,12 +1192,12 @@ class KeyManagement {
 
           await this.refreshPublicKeys();
         } else {
-          console.error("[OpenPGP UI] Public key import failed:", result.error);
+          logger.error("OpenPGP UI", "Public key import failed:", result.error);
           showStatus(statusEl, `Error: ${result.error}`, "error");
         }
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Unexpected error during import:", error);
+      logger.error("OpenPGP UI", "Unexpected error during import:", error);
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
     } finally {
       this.importBtn.disabled = false;
@@ -1203,7 +1211,7 @@ class KeyManagement {
    * @param {string} content - Content of file
    */
   downloadTextFile(filename, content) {
-    console.log("[OpenPGP UI] Downloading file:", filename);
+    logger.log("OpenPGP UI", "Downloading file:", filename);
 
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -1216,11 +1224,11 @@ class KeyManagement {
         saveAs: true,
       })
       .then(() => {
-        console.log("[OpenPGP UI] Download started");
+        logger.log("OpenPGP UI", "Download started");
         URL.revokeObjectURL(url);
       })
       .catch((error) => {
-        console.error("[OpenPGP UI] Download failed:", error);
+        logger.error("OpenPGP UI", "Download failed:", error);
       });
   }
 
@@ -1242,7 +1250,7 @@ class KeyManagement {
  */
 class EncryptionController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing encryption controller");
+    logger.log("OpenPGP UI", "Initializing encryption controller");
 
     this.encryptBtn = document.getElementById("encryptBtn");
     this.signCheckbox = document.getElementById("encryptSign");
@@ -1300,7 +1308,7 @@ class EncryptionController {
    * Encrypt a message
    */
   async encrypt() {
-    console.log("[OpenPGP UI] Encrypt button clicked");
+    logger.log("OpenPGP UI", "Encrypt button clicked");
 
     const statusEl = document.getElementById("encryptStatus");
     const message = document.getElementById("encryptMessage").value.trim();
@@ -1367,22 +1375,23 @@ class EncryptionController {
         options.passphrase = passphrase;
       }
 
-      console.log("[OpenPGP UI] Calling PGP handler to encrypt");
+      logger.log("OpenPGP UI", "Calling PGP handler to encrypt");
 
       const result = await pgpHandler.encrypt(options);
 
       if (result.success) {
-        console.log("[OpenPGP UI] Encryption successful");
+        logger.log("OpenPGP UI", "Encryption successful");
         showStatus(statusEl, "Message encrypted successfully!", "success");
 
         document.getElementById("encryptedText").value = result.encrypted;
         setVisible(document.getElementById("encryptedOutput"), true);
+        incrementUsageCount();
       } else {
-        console.error("[OpenPGP UI] Encryption failed:", result.error);
+        logger.error("OpenPGP UI", "Encryption failed:", result.error);
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Unexpected error during encryption:", error);
+      logger.error("OpenPGP UI", "Unexpected error during encryption:", error);
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
     } finally {
       this.encryptBtn.disabled = false;
@@ -1399,10 +1408,10 @@ class EncryptionController {
 
     try {
       await navigator.clipboard.writeText(element.value);
-      console.log("[OpenPGP UI] Copied to clipboard");
+      logger.log("OpenPGP UI", "Copied to clipboard");
       alert("Copied to clipboard!");
     } catch (error) {
-      console.error("[OpenPGP UI] Copy failed:", error);
+      logger.error("OpenPGP UI", "Copy failed:", error);
       // Fallback: select text
       element.select();
       alert("Please use Ctrl+C to copy");
@@ -1415,7 +1424,7 @@ class EncryptionController {
  */
 class DecryptionController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing decryption controller");
+    logger.log("OpenPGP UI", "Initializing decryption controller");
 
     this.decryptBtn = document.getElementById("decryptBtn");
     this.manualKeyToggle = document.getElementById("decryptManualKeyToggle");
@@ -1448,7 +1457,7 @@ class DecryptionController {
       .addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          console.log("Enter key pressed, decrypt button");
+          logger.log("OpenPGP UI", "Enter key pressed, decrypt button");
           this.decryptBtn.click();
         }
       });
@@ -1458,7 +1467,7 @@ class DecryptionController {
    * Decrypt a message
    */
   async decrypt() {
-    console.log("[OpenPGP UI] Decrypt button clicked");
+    logger.log("OpenPGP UI", "Decrypt button clicked");
 
     const statusEl = document.getElementById("decryptStatus");
     const encrypted = document.getElementById("decryptMessage").value.trim();
@@ -1498,11 +1507,11 @@ class DecryptionController {
     }
 
     showStatus(statusEl, "Decrypting message...", "info");
-    console.log("Decrypting message....");
+    logger.log("OpenPGP UI", "Decrypting message....");
     this.decryptBtn.disabled = true;
 
     try {
-      console.log("[OpenPGP UI] Calling PGP handler to decrypt");
+      logger.log("OpenPGP UI", "Calling PGP handler to decrypt");
 
       const result = await pgpHandler.decrypt({
         encrypted,
@@ -1512,8 +1521,9 @@ class DecryptionController {
       });
 
       if (result.success) {
-        console.log("[OpenPGP UI] Decryption successful");
+        logger.log("OpenPGP UI", "Decryption successful");
         showStatus(statusEl, "Message decrypted successfully!", "success");
+        incrementUsageCount();
 
         document.getElementById("decryptedText").value = result.decrypted;
 
@@ -1536,7 +1546,7 @@ class DecryptionController {
         setVisible(document.getElementById("decryptedOutput"), true);
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Unexpected error during decryption:", error);
+      logger.error("OpenPGP UI", "Unexpected error during decryption:", error);
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
     } finally {
       this.decryptBtn.disabled = false;
@@ -1553,10 +1563,10 @@ class DecryptionController {
 
     try {
       await navigator.clipboard.writeText(element.value);
-      console.log("[OpenPGP UI] Copied to clipboard");
+      logger.log("OpenPGP UI", "Copied to clipboard");
       alert("Copied to clipboard!");
     } catch (error) {
-      console.error("[OpenPGP UI] Copy failed:", error);
+      logger.error("OpenPGP UI", "Copy failed:", error);
       element.select();
       alert("Please use Ctrl+C to copy");
     }
@@ -1568,7 +1578,7 @@ class DecryptionController {
  */
 class SigningController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing signing controller");
+    logger.log("OpenPGP UI", "Initializing signing controller");
 
     this.signBtn = document.getElementById("signBtn");
 
@@ -1598,7 +1608,7 @@ class SigningController {
    * Sign a message
    */
   async sign() {
-    console.log("[OpenPGP UI] Sign button clicked");
+    logger.log("OpenPGP UI", "Sign button clicked");
 
     const statusEl = document.getElementById("signStatus");
     const message = document.getElementById("signMessage").value.trim();
@@ -1621,7 +1631,7 @@ class SigningController {
     this.signBtn.disabled = true;
 
     try {
-      console.log("[OpenPGP UI] Calling PGP handler to sign");
+      logger.log("OpenPGP UI", "Calling PGP handler to sign");
 
       const result = await pgpHandler.sign({
         message,
@@ -1631,17 +1641,18 @@ class SigningController {
       });
 
       if (result.success) {
-        console.log("[OpenPGP UI] Signing successful");
+        logger.log("OpenPGP UI", "Signing successful");
         showStatus(statusEl, "Message signed successfully!", "success");
 
         document.getElementById("signedText").value = result.signed;
         setVisible(document.getElementById("signedOutput"), true);
+        incrementUsageCount();
       } else {
-        console.error("[OpenPGP UI] Signing failed:", result.error);
+        logger.error("OpenPGP UI", "Signing failed:", result.error);
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error("[OpenPGP UI] Unexpected error during signing:", error);
+      logger.error("OpenPGP UI", "Unexpected error during signing:", error);
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
     } finally {
       this.signBtn.disabled = false;
@@ -1658,10 +1669,10 @@ class SigningController {
 
     try {
       await navigator.clipboard.writeText(element.value);
-      console.log("[OpenPGP UI] Copied to clipboard");
+      logger.log("OpenPGP UI", "Copied to clipboard");
       alert("Copied to clipboard!");
     } catch (error) {
-      console.error("[OpenPGP UI] Copy failed:", error);
+      logger.error("OpenPGP UI", "Copy failed:", error);
       element.select();
       alert("Please use Ctrl+C to copy");
     }
@@ -1673,7 +1684,7 @@ class SigningController {
  */
 class VerificationController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing verification controller");
+    logger.log("OpenPGP UI", "Initializing verification controller");
 
     this.verifyBtn = document.getElementById("verifyBtn");
 
@@ -1692,7 +1703,7 @@ class VerificationController {
    * Verify a signed message
    */
   async verify() {
-    console.log("[OpenPGP UI] Verify button clicked");
+    logger.log("OpenPGP UI", "Verify button clicked");
 
     const statusEl = document.getElementById("verifyStatus");
     const signedMessage = document.getElementById("verifyMessage").value.trim();
@@ -1732,7 +1743,7 @@ class VerificationController {
     this.verifyBtn.disabled = true;
 
     try {
-      console.log("[OpenPGP UI] Calling PGP handler to verify");
+      logger.log("OpenPGP UI", "Calling PGP handler to verify");
 
       const result = await pgpHandler.verify({
         signedMessage,
@@ -1740,7 +1751,7 @@ class VerificationController {
       });
 
       if (result.success) {
-        console.log("[OpenPGP UI] Verification complete");
+        logger.log("OpenPGP UI", "Verification complete");
 
         /*
          */
@@ -1774,13 +1785,15 @@ class VerificationController {
         }
 
         setVisible(document.getElementById("verifyOutput"), true);
+        incrementUsageCount();
       } else {
-        console.error("[OpenPGP UI] Verification failed:", result.error);
+        logger.error("OpenPGP UI", "Verification failed:", result.error);
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error(
-        "[OpenPGP UI] Unexpected error during verification:",
+      logger.error(
+        "OpenPGP UI",
+        "Unexpected error during verification:",
         error,
       );
       showStatus(statusEl, `Unexpected error: ${error.message}`, "error");
@@ -1807,7 +1820,7 @@ class VerificationController {
  */
 class SettingsController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing settings controller");
+    logger.log("OpenPGP UI", "Initializing settings controller");
 
     document
       .getElementById("exportBackupBtn")
@@ -1895,7 +1908,7 @@ class SettingsController {
           showStatus(statusEl, `Download failed: ${err.message}`, "error");
         });
     } catch (err) {
-      console.error("[OpenPGP UI] Export backup failed:", err);
+      logger.error("OpenPGP UI", "Export backup failed:", err);
       showStatus(statusEl, `Error: ${err.message}`, "error");
     }
   }
@@ -1937,9 +1950,9 @@ class SettingsController {
           "success",
         );
 
-        console.log("[OpenPGP UI] Backup imported:", imported);
+        logger.log("OpenPGP UI", "Backup imported:", imported);
       } catch (err) {
-        console.error("[OpenPGP UI] Import backup failed:", err);
+        logger.error("OpenPGP UI", "Import backup failed:", err);
         showStatus(statusEl, `Error reading backup: ${err.message}`, "error");
       }
     };
@@ -1957,7 +1970,7 @@ class SettingsController {
  */
 class FileController {
   constructor() {
-    console.log("[OpenPGP UI] Initializing file controller");
+    logger.log("OpenPGP UI", "Initializing file controller");
 
     this.fileEncryptBtn = document.getElementById("fileEncryptBtn");
     this.fileDecryptBtn = document.getElementById("fileDecryptBtn");
@@ -1978,7 +1991,10 @@ class FileController {
   }
 
   async refreshFileTabDropdowns() {
-    console.log("refreshing both pub/priv key dropdowns in file tab");
+    logger.log(
+      "OpenPGP UI",
+      "refreshing both pub/priv key dropdowns in file tab",
+    );
     // Public keys for file encryption
     const publicKeys = await pgpHandler.getAllPublicKeys();
     const encDropdown = document.getElementById("fileEncryptRecipientSelect");
@@ -2011,7 +2027,7 @@ class FileController {
   }
 
   async encryptFile() {
-    console.log("encryptFile() called");
+    logger.log("OpenPGP UI", "encryptFile() called");
     const statusEl = document.getElementById("fileEncryptStatus");
     const fileInput = document.getElementById("fileEncryptInput");
     const useManual = document.getElementById(
@@ -2071,10 +2087,12 @@ class FileController {
           `File encrypted and downloaded as ${result.suggestedFileName}`,
           "success",
         );
-        console.log(
-          `File encrypted and downloaded as $(result.suggestedFilename)`,
+        logger.log(
+          "OpenPGP UI",
+          `File encrypted and downloaded as ${result.suggestedFileName}`,
         );
         fileInput.value = "";
+        incrementUsageCount();
       } else {
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
@@ -2129,6 +2147,7 @@ class FileController {
         );
         fileInput.value = "";
         document.getElementById("fileDecryptPassphrase").value = "";
+        incrementUsageCount();
       } else {
         showStatus(statusEl, `Error: ${result.error}`, "error");
       }
@@ -2140,23 +2159,185 @@ class FileController {
   }
 
   downloadTextFile(filename, content) {
-    console.log("[OpenPGP UI] Downloading encrypted file:", filename);
+    logger.log("OpenPGP UI", "Downloading encrypted file:", filename);
     const blob = new Blob([content], { type: "application/pgp-encrypted" });
     const url = URL.createObjectURL(blob);
     browser.downloads
       .download({ url, filename, saveAs: true })
       .then(() => URL.revokeObjectURL(url))
-      .catch((err) => console.error("[OpenPGP UI] File download failed:", err));
+      .catch((err) => logger.error("OpenPGP UI", "File download failed:", err));
   }
 
   downloadBinaryFile(filename, data) {
-    console.log("[OpenPGP UI] Downloading decrypted file:", filename);
+    logger.log("OpenPGP UI", "Downloading decrypted file:", filename);
     const blob = new Blob([data], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
     browser.downloads
       .download({ url, filename, saveAs: true })
       .then(() => URL.revokeObjectURL(url))
-      .catch((err) => console.error("[OpenPGP UI] File download failed:", err));
+      .catch((err) => logger.error("OpenPGP UI", "File download failed:", err));
+  }
+}
+
+/**
+ * Increment the stored usage count by one.
+ * Called after every successful crypto operation.
+ */
+async function incrementUsageCount() {
+  try {
+    const result = await browser.storage.local.get("firegpg_usage_count");
+    const count = (result.firegpg_usage_count || 0) + 1;
+    await browser.storage.local.set({ firegpg_usage_count: count });
+    logger.log("OpenPGP UI", "Usage count incremented to", count);
+  } catch (err) {
+    logger.error("OpenPGP UI", "Failed to increment usage count:", err);
+  }
+}
+
+/**
+ * Review / Donate Nag Controller
+ *
+ * Shows a polite banner asking users to leave a review or donate after
+ * they have used the extension for a while and performed several operations.
+ * Users who want to report a problem are directed to the contact page.
+ */
+class ReviewNagController {
+  // ── Configuration ──────────────────────────────────────────────────────
+  // Update REVIEW_URL to the actual AMO listing URL for the extension.
+  static REVIEW_URL =
+    "https://addons.mozilla.org/en-US/firefox/addon/pgp-suite-encrypt-messages-files/reviews/";
+  // Update DONATE_URL to your preferred donation page (PayPal, Ko-fi, etc.).
+  static DONATE_URL = "https://www.yourdev.net";
+  static CONTACT_URL = "https://www.yourdev.net/#contact";
+
+  // Show nag after this many days since install…
+  static MIN_DAYS_INSTALLED = 7;
+  // …and this many successful operations.
+  static MIN_USAGE_COUNT = 5;
+  // Snooze duration: 30 days.
+  static SNOOZE_DAYS = 30;
+  // ───────────────────────────────────────────────────────────────────────
+
+  constructor() {
+    logger.log("OpenPGP UI", "Initializing review nag controller");
+    this.banner = document.getElementById("reviewNagBanner");
+    this.check();
+  }
+
+  async check() {
+    try {
+      const result = await browser.storage.local.get([
+        "firegpg_install_date",
+        "firegpg_usage_count",
+        "firegpg_review_nag_state",
+      ]);
+
+      const installDate = result.firegpg_install_date || null;
+      const usageCount = result.firegpg_usage_count || 0;
+      const nagState = result.firegpg_review_nag_state || null;
+
+      // Never show if permanently dismissed.
+      if (nagState === "dismissed") return;
+
+      // Never show if snoozed and the snooze period has not expired.
+      if (nagState && nagState.startsWith("snoozed:")) {
+        const until = parseInt(nagState.split(":")[1], 10);
+        if (Date.now() < until) return;
+      }
+
+      // Require a known install date that is old enough.
+      if (!installDate) return;
+      const daysSinceInstall =
+        (Date.now() - installDate) / (1000 * 60 * 60 * 24);
+      if (daysSinceInstall < ReviewNagController.MIN_DAYS_INSTALLED) return;
+
+      // Require enough actual usage.
+      if (usageCount < ReviewNagController.MIN_USAGE_COUNT) return;
+
+      this.show();
+    } catch (err) {
+      logger.error("OpenPGP UI", "Review nag check failed:", err);
+    }
+  }
+
+  show() {
+    logger.log("OpenPGP UI", "Showing review nag banner");
+
+    // Wire up the links.
+    document.getElementById("reviewNagReviewBtn").href =
+      ReviewNagController.REVIEW_URL;
+    document.getElementById("reviewNagDonateBtn").href =
+      ReviewNagController.DONATE_URL;
+
+    // Clicking a positive CTA (review / donate) dismisses the nag permanently.
+    document
+      .getElementById("reviewNagReviewBtn")
+      .addEventListener("click", () => this.dismiss());
+    document
+      .getElementById("reviewNagDonateBtn")
+      .addEventListener("click", () => this.dismiss());
+
+    document
+      .getElementById("reviewNagContactBtn")
+      .addEventListener("click", () => {
+        browser.tabs
+          .create({ url: ReviewNagController.CONTACT_URL })
+          .catch(() => {
+            window.open(
+              ReviewNagController.CONTACT_URL,
+              "_blank",
+              "noopener,noreferrer",
+            );
+          });
+        this.snooze();
+      });
+
+    document
+      .getElementById("reviewNagSnoozeBtn")
+      .addEventListener("click", () => this.snooze());
+    document
+      .getElementById("reviewNagDismissBtn")
+      .addEventListener("click", () => this.dismiss());
+
+    this.banner.classList.remove("hidden");
+  }
+
+  async dismiss() {
+    try {
+      await browser.storage.local.set({
+        firegpg_review_nag_state: "dismissed",
+      });
+      logger.log("OpenPGP UI", "Review nag dismissed permanently");
+    } catch (err) {
+      logger.error(
+        "OpenPGP UI",
+        "Failed to save review nag dismiss state:",
+        err,
+      );
+    }
+    this.banner.classList.add("hidden");
+  }
+
+  async snooze() {
+    try {
+      const until =
+        Date.now() + ReviewNagController.SNOOZE_DAYS * 24 * 60 * 60 * 1000;
+      await browser.storage.local.set({
+        firegpg_review_nag_state: `snoozed:${until}`,
+      });
+      logger.log(
+        "OpenPGP UI",
+        "Review nag snoozed until",
+        new Date(until).toLocaleDateString(),
+      );
+    } catch (err) {
+      logger.error(
+        "OpenPGP UI",
+        "Failed to save review nag snooze state:",
+        err,
+      );
+    }
+    this.banner.classList.add("hidden");
   }
 }
 
@@ -2164,7 +2345,7 @@ class FileController {
  * Initialize all controllers when DOM is ready
  */
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[OpenPGP UI] DOM loaded, initializing controllers");
+  logger.log("OpenPGP UI", "DOM loaded, initializing controllers");
 
   // Initialize controllers
   const tabManager = new TabManager();
@@ -2175,26 +2356,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const verificationController = new VerificationController();
   fileController = new FileController();
   const settingsController = new SettingsController();
+  const reviewNagController = new ReviewNagController();
 
   // Set up debug mode toggle
   const debugCheckbox = document.getElementById("debugMode");
+  const verboseCheckbox = document.getElementById("verboseMode");
 
-  // Load debug mode state
-  browser.storage.local.get("debugMode").then((result) => {
-    if (result.debugMode !== undefined) {
+  // Load checkbox states from storage
+  browser.storage.local.get(["debugMode", "verboseMode"]).then((result) => {
+    if (result.debugMode !== undefined)
       debugCheckbox.checked = result.debugMode;
-    }
+    if (result.verboseMode !== undefined)
+      verboseCheckbox.checked = result.verboseMode;
   });
 
   debugCheckbox.addEventListener("change", () => {
-    pgpHandler.setDebugMode(debugCheckbox.checked);
-    console.log("[OpenPGP UI] Debug mode toggled:", debugCheckbox.checked);
+    browser.storage.local.set({ debugMode: debugCheckbox.checked });
+  });
+
+  verboseCheckbox.addEventListener("change", () => {
+    browser.storage.local.set({ verboseMode: verboseCheckbox.checked });
   });
 
   // Listen for lock requests from the background script (e.g. on browser startup / suspend)
   browser.runtime.onMessage.addListener((message) => {
     if (message.type === "lockMasterPassword") {
-      console.log("[OpenPGP UI] Received lockMasterPassword — locking session");
+      logger.log("OpenPGP UI", "Received lockMasterPassword — locking session");
       pgpHandler.lockMasterPassword();
       // Re-show the unlock banner if master password is configured
       pgpHandler.isMasterPasswordRequired().then((required) => {
@@ -2206,5 +2393,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  console.log("[OpenPGP UI] All controllers initialized successfully");
+  logger.log("OpenPGP UI", "All controllers initialized successfully");
 });

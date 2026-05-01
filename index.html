@@ -24,6 +24,24 @@
       </div>
     </div>
 
+    <!-- Review / Donate Nag Banner -->
+    <div id="reviewNagBanner" class="review-nag-banner hidden">
+      <div class="review-nag-content">
+        <div class="review-nag-icon">⭐</div>
+        <div class="review-nag-text">
+          <strong>Enjoying PGP Suite?</strong>
+          <p>It takes 30 seconds and makes a huge difference! Please leave a review or consider a small donation if this extension has been useful to you.</p>
+        </div>
+      </div>
+      <div class="review-nag-actions">
+        <a id="reviewNagReviewBtn" href="#" class="btn btn-primary btn-small" target="_blank" rel="noopener noreferrer">⭐ Leave a Review</a>
+        <a id="reviewNagDonateBtn" href="#" class="btn btn-secondary btn-small" target="_blank" rel="noopener noreferrer">❤️ Donate</a>
+        <button id="reviewNagContactBtn" class="btn btn-secondary btn-small">Something's not right?</button>
+        <button id="reviewNagSnoozeBtn" class="btn btn-ghost btn-small">Maybe later</button>
+        <button id="reviewNagDismissBtn" class="btn btn-ghost btn-small">Don't ask again</button>
+      </div>
+    </div>
+
     <!-- First-Time Setup Banner -->
     <div id="firstTimeSetupBanner" class="first-time-banner hidden">
       <div class="first-time-banner-content">
@@ -464,12 +482,18 @@
           <input type="checkbox" id="debugMode">
           Enable Debug Logging
         </label>
+        &nbsp;
+        <label>
+          <input type="checkbox" id="verboseMode">
+          Verbose Logging
+        </label>
       </p>
     </footer>
   </div>
 
-  <!-- Scripts - Load OpenPGP.js library first, then our PGP handler, then UI script -->
+  <!-- Scripts - Load OpenPGP.js library first, then logger, then PGP handler, then UI script -->
   <script src="lib/openpgp.min.js"></script>
+  <script src="js/logger.js"></script>
   <script src="js/pgp-handler.js"></script>
   <script src="js/ui.js"></script>
 </body>

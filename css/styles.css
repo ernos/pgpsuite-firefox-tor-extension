@@ -306,6 +306,69 @@ details:not([open]) .card-summary::after {
   flex-wrap: wrap;
 }
 
+/* ===== Review / Donate Nag Banner ===== */
+.review-nag-banner {
+  background: linear-gradient(135deg, rgba(0, 102, 204, 0.12) 0%, rgba(0, 180, 120, 0.12) 100%);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.review-nag-content {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  align-items: flex-start;
+}
+
+.review-nag-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.review-nag-text {
+  flex: 1;
+}
+
+.review-nag-text strong {
+  display: block;
+  font-size: 15px;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.review-nag-text p {
+  color: var(--text-color);
+  font-size: 13px;
+  margin: 0;
+}
+
+.review-nag-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-color);
+}
+
 /* ===== Lock Banner ===== */
 .lock-banner {
   background-color: rgba(255, 193, 7, 0.1);

@@ -3,33 +3,25 @@
   "manifest_version": 2,
   "name": "PGP Suite – Encrypt Messages & Files",
   "description": "Encrypt, decrypt, sign and verify PGP messages and files in Firefox — no external apps needed. Generate key pairs, encrypt any file, secure emails and share files privately. Works with all PGP-compatible tools. No server. No tracking.",
-  "permissions": [
-    "storage", "downloads"
-  ],
+  "permissions": ["storage", "downloads"],
   "browser_action": {
     "default_icon": {
-      "128": "icon/icon-128.png",
       "64": "icon/icon-64.png",
       "48": "icon/icon-48.png",
       "32": "icon/icon-32.png",
       "16": "icon/icon-16.png"
     },
-    "default_title": "OpenPGP"
+    "default_title": "PGP Suite"
   },
-  "web_accessible_resources": [
-    "lib/openpgp.min.js"
-  ],
+  "web_accessible_resources": ["lib/openpgp.min.js"],
   "background": {
-    "scripts": [
-      "js/background.js"
-    ]
+    "scripts": ["js/background.js"]
   },
   "sidebar_action": {
     "default_panel": "index.html",
-    "default_icon": "icon/icon-128.png"
+    "default_icon": "icon/icon-64.png"
   },
   "icons": {
-    "128": "icon/icon-128.png",
     "64": "icon/icon-64.png",
     "48": "icon/icon-48.png",
     "32": "icon/icon-32.png",
@@ -38,9 +30,7 @@
   "browser_specific_settings": {
     "gecko": {
       "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
+        "required": ["none"]
       }
     },
     "id": "@OpenPGP"
