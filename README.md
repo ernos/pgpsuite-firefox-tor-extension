@@ -1,5 +1,7 @@
 # PGPSuite for Firefox & Tor Browser
 
+![PGP Suite Bannger](https://www.yourdev.net/pgpsuite/assets/images/banner-for-readme.png)
+
 PGPSuite brings OpenPGP encryption directly into Firefox and Tor Browser, making it easy to encrypt, decrypt, sign, and verify messages without installing separate desktop software.
 
 Whether you're communicating on privacy-focused forums, marketplaces, email services, or simply exchanging encrypted messages with friends, PGPSuite keeps everything inside your browser.
@@ -10,7 +12,7 @@ Whether you're communicating on privacy-focused forums, marketplaces, email serv
 
 Install directly from Mozilla Add-ons:
 
-**https://addons.mozilla.org/en-US/firefox/addon/pgpsuite/**
+[**Install PGP-Suite for Firefox or TOR Browser**](https://addons.mozilla.org/en-US/firefox/addon/pgpsuite/)
 
 1.  Visit the link above.
 2.  Click **Add to Firefox**.
@@ -23,7 +25,7 @@ _**NOTICE for TOR users!**_
 
 Because of how tor is built around security and privacy, for this to work under tor you will have to select "Allow extension to run in private windows".
 
-![](https://www.yourdev.net/pgpsuite/assets/images/Tor-Allow-In-Private-Windows.png)
+![Allow to run in private windows - required for TOR Browser](https://www.yourdev.net/pgpsuite/assets/images/Tor-Allow-In-Private-Windows.png)
 
 This is because ALL windows when using TOR Browser are considered private windows becuase of how their security layers are built, set up and configured for your safety. This does not however change the fact that the extension does not have access to data in any windows, and only uses permissions which allows to access downloads (for exporting data - download an exported version of all of your keys etc to import in another browser with the extension) and it has access to storage - which is used to save all of the keys, public and private to your local browser storage. The extension never has any access to anything (including no data inside of any tabs - any website you visit) or anything else.
 
@@ -118,7 +120,7 @@ Click **Generate Key Pair**.
 
 Key generation may take a short time depending on your device.
 
-![](https://www.yourdev.net/pgpsuite/assets/images/generate-new-key.png)
+![Generating new keys in 5 seconds](https://www.yourdev.net/pgpsuite/assets/images/generate-new-key.png)
 
 ### Import Existing Keys
 
@@ -144,7 +146,7 @@ PGPSuite automatically detects whether the key is public or private.
 
 Only the intended recipient can decrypt the message.
 
-![](https://www.yourdev.net/pgpsuite/assets/images/encrypt-message.png)
+![Encrypting messages](https://www.yourdev.net/pgpsuite/assets/images/encrypt-message.png)
 
 ---
 
@@ -158,7 +160,7 @@ Only the intended recipient can decrypt the message.
 
 The original message will be displayed immediately.
 
-![](https://www.yourdev.net/pgpsuite/assets/images/decrypted-message.png)
+![Decrypting messages](https://www.yourdev.net/pgpsuite/assets/images/decrypted-message.png)
 
 ---
 
@@ -172,7 +174,7 @@ Digital signatures allow recipients to verify that a message genuinely came from
 4.  Enter your passphrase.
 5.  Click **Sign Message**.
 
-![](https://www.yourdev.net/pgpsuite/assets/images/sign-message.png)
+![Signing messages](https://www.yourdev.net/pgpsuite/assets/images/sign-message.png)
 
 ---
 
@@ -185,7 +187,7 @@ Digital signatures allow recipients to verify that a message genuinely came from
 
 PGPSuite will confirm whether the signature is valid.
 
-![](https://www.yourdev.net/pgpsuite/assets/images/signature-verification.png)
+![Verifying signed messages](https://www.yourdev.net/pgpsuite/assets/images/signature-verification.png)
 
 ---
 
@@ -261,7 +263,22 @@ You can create, import, and manage multiple key pairs.
 
 ## Support
 
-If you encounter issues or would like to report a bug, please visit the project's GitHub repository and create an issue.
+If you encounter issues or would like to report a bug, please visit the project's GitHub repository and create an issue.  
+[Github Page for PGP Suite](https://github.com/ernos/pgpsuite-firefox-tor-extension)
+
+## Contributions
+
+Visit the github page:  
+(Github Page for PGP Suite)\[https://github.com/ernos/pgpsuite-firefox-tor-extension]
+
+## Donations
+
+I do this 100% on my free time, I've been programming my whole life but been having a hard time getting into this line of work, so PLEASE, if you like this or anything else I do, feel free to donate any small or large amount to:
+
+*   **Bitcoin**: bc1qg7sqyhldmp3twahq0vxnlacuncyw24jf84z8n0
+*   **Monero**: 84Qp6KEnUXeh53CxsEDSnXVtaNHNvEeioDRd7PAaQqR92kYLeKWxoHh62b6CXzbpzXSERfvqHbHDMGCSnPCnatYr2FX7FC7
+*   **Ethereum**: 0x73660083E37F568acD27559F6e8C9c07d5011620
+*   **Solana**: 8pvjZrYeJ51K56uJj8vRhjnhr2hXcEZJkEueRh11n6u5
 
 ---
 
