@@ -1,0 +1,249 @@
+# PGPSuite for Firefox & Tor Browser
+
+PGPSuite brings OpenPGP encryption directly into Firefox and Tor Browser, making it easy to encrypt, decrypt, sign, and verify messages without installing separate desktop software.
+
+Whether you're communicating on privacy-focused forums, marketplaces, email services, or simply exchanging encrypted messages with friends, PGPSuite keeps everything inside your browser.
+
+---
+
+## Install
+
+Install directly from Mozilla Add-ons:
+
+**https://addons.mozilla.org/en-US/firefox/addon/pgpsuite/**
+
+1. Visit the link above.
+2. Click **Add to Firefox**.
+3. Confirm the installation.
+4. The PGPSuite icon will appear in your browser toolbar.
+
+That's it. No additional software, command-line tools, or configuration is required.
+
+---
+
+## Why Use PGPSuite?
+
+Many people use PGP for:
+
+* Secure messaging
+* Privacy-focused communities
+* Encrypted login credentials
+* Secure document sharing
+* Digital signatures
+
+Traditionally, this requires installing separate applications and learning command-line tools.
+
+PGPSuite simplifies the process by providing a complete OpenPGP toolkit directly inside your browser.
+
+---
+
+## Security First
+
+PGPSuite was designed with privacy and transparency in mind.
+
+### Your Data Stays Local
+
+* Encryption and decryption happen inside your browser.
+* Your keys are never uploaded to external servers.
+* Messages are processed locally on your device.
+
+### Minimal Permissions
+
+The extension only requests permissions required for its functionality.
+
+### Open Source
+
+The source code is publicly available and can be inspected by anyone.
+
+### Built on OpenPGP.js
+
+PGPSuite uses OpenPGP.js, one of the most widely used OpenPGP implementations in the JavaScript ecosystem.
+
+---
+
+## Features
+
+### Key Management
+
+* Generate new OpenPGP key pairs
+* Import existing private keys
+* Import public keys from contacts
+* Export private and public keys
+* Manage multiple keys
+
+### Message Encryption
+
+* Encrypt messages using public keys
+* Decrypt messages using your private keys
+* Encrypt and sign messages simultaneously
+
+### Digital Signatures
+
+* Sign messages
+* Verify signatures
+* Detect tampered or modified content
+
+### Browser Integration
+
+* Sidebar interface
+* Copy-to-clipboard functionality
+* Automatic detection of PGP content on web pages
+* Context menu integration
+
+---
+
+## Getting Started
+
+### Create Your First Key Pair
+
+1. Open PGPSuite from the toolbar.
+2. Navigate to the **Keys** tab.
+3. Enter:
+
+   * Name
+   * Email address
+   * Strong passphrase
+4. Click **Generate Key Pair**.
+
+Key generation may take a short time depending on your device.
+
+### Import Existing Keys
+
+If you already have PGP keys:
+
+1. Open the **Keys** tab.
+2. Select **Import Key**.
+3. Paste your key.
+4. Enter the passphrase if required.
+5. Click **Import**.
+
+PGPSuite automatically detects whether the key is public or private.
+
+---
+
+## Encrypting a Message
+
+1. Open the **Encrypt** tab.
+2. Select the recipient's public key.
+3. Enter your message.
+4. Click **Encrypt Message**.
+5. Copy the encrypted output and send it to the recipient.
+
+Only the intended recipient can decrypt the message.
+
+---
+
+## Decrypting a Message
+
+1. Open the **Decrypt** tab.
+2. Paste the encrypted message.
+3. Select your private key.
+4. Enter your passphrase.
+5. Click **Decrypt Message**.
+
+The original message will be displayed immediately.
+
+---
+
+## Signing a Message
+
+Digital signatures allow recipients to verify that a message genuinely came from you.
+
+1. Open the **Sign** tab.
+2. Enter your message.
+3. Select your private key.
+4. Enter your passphrase.
+5. Click **Sign Message**.
+
+---
+
+## Verifying a Signature
+
+1. Open the **Verify** tab.
+2. Paste the signed message.
+3. Provide the sender's public key.
+4. Click **Verify Signature**.
+
+PGPSuite will confirm whether the signature is valid.
+
+---
+
+## Automatic PGP Detection
+
+When browsing websites, PGPSuite can automatically detect:
+
+* Encrypted PGP messages
+* Signed messages
+* Public keys
+
+When detected, convenient action buttons appear directly on the page, allowing you to:
+
+* Decrypt messages
+* Verify signatures
+* Import keys
+
+without manually copying and pasting data.
+
+---
+
+## Security Recommendations
+
+For the best security:
+
+### Use a Strong Passphrase
+
+Your private key is only as secure as its passphrase.
+
+### Back Up Your Keys
+
+Store backups in a secure location.
+
+If you lose your private key, you may permanently lose access to encrypted messages.
+
+### Verify Public Keys
+
+Always verify key fingerprints when exchanging keys with new contacts.
+
+### Keep Your Browser Updated
+
+Security updates are important for protecting your encrypted communications.
+
+---
+
+## Frequently Asked Questions
+
+### Does PGPSuite store my passphrase?
+
+No.
+
+Passphrases are never stored and must be entered when needed.
+
+### Are my messages uploaded anywhere?
+
+No.
+
+All cryptographic operations happen locally inside your browser.
+
+### Does it work with existing PGP software?
+
+Yes.
+
+PGPSuite is compatible with standard OpenPGP keys and messages used by popular PGP applications.
+
+### Can I use multiple keys?
+
+Yes.
+
+You can create, import, and manage multiple key pairs.
+
+---
+
+## Support
+
+If you encounter issues or would like to report a bug, please visit the project's GitHub repository and create an issue.
+
+---
+
+Secure communication should be simple.
+
+PGPSuite provides modern OpenPGP functionality directly in Firefox and Tor Browser while keeping your keys and messages under your control.

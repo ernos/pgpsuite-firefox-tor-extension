@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPGP</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Password Modal Dialog -->
+    <div id="passwordModal" class="modal-overlay hidden">
+      <div class="modal-dialog">
+        <h3 id="passwordModalTitle">Enter Password</h3>
+        <p id="passwordModalMessage"></p>
+        <input type="password" id="passwordModalInput" placeholder="Password" />
+        <div id="passwordModalStatus" class="status"></div>
+        <div class="modal-actions">
+          <button id="passwordModalOk" class="btn btn-primary">OK</button>
+          <button id="passwordModalCancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- First-Time Setup Banner -->
+    <div id="firstTimeSetupBanner" class="first-time-banner hidden">
+      <div class="first-time-banner-content">
+        <div class="first-time-banner-icon">⚠️</div>
+        <div class="first-time-banner-text">
+          <strong>It is highly recommended to set a master password!</strong>
+          <p>If you do not set a master password, your private keys are stored unencrypted in the browser's local storage.</p>
+        </div>
+      </div>
+      <div class="first-time-banner-actions">
+        <button id="firstTimeSetupYesBtn" class="btn btn-primary">Set Master Password Now</button>
+        <button id="firstTimeSetupNoBtn" class="btn btn-secondary">Skip for Now</button>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <header>
+      <!--<h1>🔐 OpenPGP</h1>-->
+      <div style="background-color: #0c2744;">
+      <img src="icon/banner.png" width="800" height="260" style="display:block;margin:0 auto;">
+    </div>
+      <p class="subtitle">Generate a key-pair in seconds! Encrypt or decrypt PGP/PGP messages directly in the browser.
+        Full support of signatures and verifications (SIGNATURE MESSAGES). All you need and the secrets are stored in
+        localStorage - encrypted at runtime while wallet is unlocked.</p>
+      <br>
+      <small>Version: 5.42</small>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tabs">
+      <button class="tab-button active" data-tab="keys">Keys</button>
+      <button class="tab-button" data-tab="encrypt">Encrypt</button>
+      <button class="tab-button" data-tab="decrypt">Decrypt</button>
+      <button class="tab-button" data-tab="sign">Sign</button>
+      <button class="tab-button" data-tab="verify">Verify</button>
+      <button class="tab-button" data-tab="files">Files</button>
+      <button class="tab-button" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- Keys Tab -->
+    <div class="tab-content active" id="keys-tab">
+      <h2>Key Management</h2>
+
+      <!-- Master Password Lock Banner (shown when locked) -->
+      <div id="masterPasswordBanner" class="lock-banner hidden">
+        <div class="lock-banner-content">
+          <span>🔒</span>
+          <span>Private keys are locked.</span>
+          <input type="password" id="masterUnlockInput" placeholder="Master password">
+          <button id="masterUnlockBtn" class="btn btn-primary btn-small">Unlock</button>
+        </div>
+        <div id="masterUnlockStatus" class="status"></div>
+      </div>
+
+      <div class="cards-grid">
+
+        <!-- Your Keys Section (shown first) -->
+        <section class="card card-details">
+          <details id="yourKeysSectionCollapse" open>
+            <summary class="card-summary">
+              <h3>Your Keys - Defaults</h3>
+            </summary>
+            <div id="keysList" class="keys-list">
+              <p class="text-muted">No keys found. Generate a key pair to get started.</p>
+            </div>
+            <button id="refreshKeysBtn" class="btn btn-secondary">Refresh Keys</button>
+          </details>
+        </section>
+
+        <!-- Imported Public Keys -->
+        <section class="card card-details">
+          <details id="myImportedPublicKeys" open>
+            <summary class="card-summary">
+              <h3>Imported Public Keys</h3>
+            </summary>
+            <div id="publickeysList" class="keys-list">
+              <p class="text-muted">No imported public keys found. Import a few first.</p>
+            </div>
+            <button id="refreshKeysBtn" class="btn btn-secondary">Refresh Keys</button>
+          </details>
+        </section>
+
+        <!-- Generate New Key Section (collapsible) -->
+        <section class="card card-generate">
+          <details id="generateKeyDetailsCollapse" open>
+            <summary class="card-summary">
+              <h3>Generate New Key Pair</h3>
+            </summary>
+            <div class="card-details-body">
+              <div class="form-group">
+                <label for="keyName">Name:</label>
+                <input type="text" id="keyName" placeholder="Your Name">
+              </div>
+              <div class="form-group">
+                <label for="keyEmail">Email:</label>
+                <input type="email" id="keyEmail" placeholder="your.email@example.com">
+              </div>
+              <div class="form-group">
+                <label for="keyPassphrase">Passphrase:</label>
+                <input type="password" id="keyPassphrase" placeholder="Strong passphrase">
+              </div>
+              <button id="generateKeyBtn" class="btn btn-primary">Generate Key Pair</button>
+              <div id="keyGenerationStatus" class="status"></div>
+            </div>
+          </details>
+        </section>
+      </div>
+
+      <!-- Import/Export Section -->
+      <section class="card">
+        <h3>Import/Export</h3>
+        <div class="form-group">
+          <label for="importKey">Import Private or Public Key:</label>
+          <div class="textarea-with-copy">
+            <textarea id="importKey" rows="4" placeholder="Paste your private or public key here"></textarea>
+            <button class="copy-btn" data-target="importKey" title="Copy to clipboard">📋</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="importPassphrase">Passphrase (only for private keys):</label>
+          <input type="password" id="importPassphrase" placeholder="Key passphrase (leave empty for public keys)">
+        </div>
+        <button id="importKeyBtn" class="btn btn-secondary">Import Key</button>
+        <div id="importStatus" class="status"></div>
+
+        <!-- Export Output -->
+        <div id="exportedPublicOutput" class="output hidden">
+          <h3>Exported Public Key:</h3>
+          <div class="textarea-with-copy">
+            <textarea id="exportedPublicKey" rows="8" readonly></textarea>
+            <button class="copy-btn" data-target="exportedPublicKey" title="Copy to clipboard">📋</button>
+          </div>
+          <div id="exportPublicStatus" class="status"></div>
+        </div>
+
+        <div id="exportedPrivateOutput" class="output hidden">
+          <h3>Exported Private Key:</h3>
+          <div class="textarea-with-copy">
+            <textarea id="exportedPrivateKey" rows="8" readonly></textarea>
+            <button class="copy-btn" data-target="exportedPrivateKey" title="Copy to clipboard">📋</button>
+          </div>
+          <div id="exportPrivateStatus" class="status"></div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- Encrypt Tab -->
+    <div class="tab-content" id="encrypt-tab">
+      <h2>Encrypt Message</h2>
+
+      <section class="card">
+        <div class="form-group">
+          <label for="encryptRecipientSelect">Recipient's Public Key:</label>
+          <select id="encryptRecipientSelect">
+            <option value="">-- Select an imported public key --</option>
+          </select>
+          <div style="margin-top: 8px;">
+            <label>
+              <input type="checkbox" id="encryptManualKeyToggle">
+              Use manual key entry instead
+            </label>
+          </div>
+        </div>
+        <div class="form-group hidden" id="encryptRecipientManual">
+          <label for="encryptRecipient">Or paste recipient's public key:</label>
+          <textarea id="encryptRecipient" rows="4" placeholder="Paste recipient's public key here"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="encryptMessage">Message to Encrypt:</label>
+          <div class="textarea-with-copy">
+            <textarea id="encryptMessage" rows="6" placeholder="Enter your message here"></textarea>
+            <button class="copy-btn" data-target="encryptMessage" title="Copy to clipboard">📋</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="encryptSign">
+            Sign message with my key
+          </label>
+        </div>
+        <div id="encryptSignOptions" class="hidden">
+          <div class="form-group">
+            <label for="encryptSignerKey">Select Your Private Key:</label>
+            <select id="encryptSignerKey"></select>
+          </div>
+          <div class="form-group">
+            <label for="encryptSignPassphrase">Your Passphrase:</label>
+            <input type="password" id="encryptSignPassphrase" placeholder="Your key passphrase">
+          </div>
+        </div>
+        <button id="encryptBtn" class="btn btn-primary">Encrypt Message</button>
+        <div id="encryptStatus" class="status"></div>
+
+        <div id="encryptedOutput" class="output hidden">
+          <h3>Encrypted Message:</h3>
+          <div class="textarea-with-copy">
+            <textarea id="encryptedText" rows="10" readonly></textarea>
+            <button class="copy-btn" data-target="encryptedText" title="Copy to clipboard">📋</button>
+          </div>
+          <button id="copyEncryptedBtn" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="clearEncryptedBtn" class="btn btn-secondary">Clear</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Decrypt Tab -->
+    <div class="tab-content" id="decrypt-tab">
+      <h2>Decrypt Message</h2>
+
+      <section class="card">
+        <div class="form-group">
+          <label for="decryptMessage">Encrypted Message:</label>
+          <div class="textarea-with-copy">
+            <textarea id="decryptMessage" rows="8" placeholder="Paste encrypted message here"></textarea>
+            <button class="copy-btn" data-target="decryptMessage" title="Copy to clipboard">📋</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="decryptKey">Select Your Private Key:</label>
+          <select id="decryptKey"></select>
+        </div>
+        <div class="form-group">
+          <label for="decryptPassphrase">Your Passphrase:</label>
+          <input type="password" id="decryptPassphrase" placeholder="Your key passphrase">
+        </div>
+
+        <div class="form-group" style="display:none;">
+          <label for="decryptVerifyKeySelect">Sender's Public Key (optional, for signature verification):</label>
+          <select id="decryptVerifyKeySelect">
+            <option value="">-- Select an imported public key (optional) --</option>
+          </select>
+          <div style="margin-top: 8px;">
+            <label>
+              <input type="checkbox" id="decryptManualKeyToggle">
+              Use manual key entry instead
+            </label>
+          </div>
+        </div>
+        <div class="form-group hidden" id="decryptVerifyKeyManual"  style="display:none;">
+          <label for="decryptVerifyKey">Or paste sender's public key:</label>
+          <textarea id="decryptVerifyKey" rows="3"
+            placeholder="Paste sender's public key to verify signature (optional)"></textarea>
+        </div>
+        <button id="decryptBtn" class="btn btn-primary">Decrypt Message</button>
+        <div id="decryptStatus" class="status"></div>
+
+        <div id="decryptedOutput" class="output hidden">
+          <h3>Decrypted Message:</h3>
+          <div class="textarea-with-copy">
+            <textarea id="decryptedText" rows="10" readonly></textarea>
+            <button class="copy-btn" data-target="decryptedText" title="Copy to clipboard">📋</button>
+          </div>
+          <div id="signatureInfo" class="signature-info"></div>
+          <button id="copyDecryptedBtn" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="clearDecryptedBtn" class="btn btn-secondary">Clear</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Sign Tab -->
+    <div class="tab-content" id="sign-tab">
+      <h2>Sign Message</h2>
+
+      <section class="card">
+        <div class="form-group">
+          <label for="signMessage">Message to Sign:</label>
+          <div class="textarea-with-copy">
+            <textarea id="signMessage" rows="6" placeholder="Enter your message here"></textarea>
+            <button class="copy-btn" data-target="signMessage" title="Copy to clipboard">📋</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="signKey">Sign message with this private key:</label>
+          <select id="signKey"></select>
+        </div>
+        <div class="form-group">
+          <label for="signPassphrase">Your Passphrase:</label>
+          <input type="password" id="signPassphrase" placeholder="Your key passphrase">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="radio" name="signType" value="cleartext" checked>
+            Cleartext Signature (readable message)
+          </label>
+          <label>
+            <input type="radio" name="signType" value="detached">
+            Detached Signature (separate signature)
+          </label>
+        </div>
+        <button id="signBtn" class="btn btn-primary">Sign Message</button>
+        <div id="signStatus" class="status"></div>
+
+        <div id="signedOutput" class="output hidden">
+          <h3>Signed Message:</h3>
+          <div class="textarea-with-copy">
+            <textarea id="signedText" rows="10" readonly></textarea>
+            <button class="copy-btn" data-target="signedText" title="Copy to clipboard">📋</button>
+          </div>
+          <button id="copySignedBtn" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="clearSignedBtn" class="btn btn-secondary">Clear</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Verify Tab -->
+    <div class="tab-content" id="verify-tab">
+      <h2>Verify Signature</h2>
+
+      <section class="card">
+        <div class="form-group">
+          <label for="verifyMessage">Message to Verify</label>
+          <div class="textarea-with-copy">
+            <textarea id="verifyMessage" rows="8" placeholder="Paste signed message here"></textarea>
+            <button class="copy-btn" data-target="verifyMessage" title="Copy to clipboard">📋</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="verifyRecipientsPublicKey">Recipient's Public Key:</label>
+          <select id="verifyRecipientsPublicKey">
+            <option value="">-- Select a recipients imported public key --</option>
+          </select>
+          <div style="margin-top: 8px;">
+            <label>
+              <input type="checkbox" id="verifyManualKeyToggle">
+              Use manual key entry instead
+            </label>
+          </div>
+        </div>
+        <div class="form-group hidden" id="verifyRecipientHide">
+          <label for="verifyRecipient">Or paste recipient's public key:</label>
+          <textarea id="verifyRecipient" rows="4" placeholder="Paste recipient's public key here"></textarea>
+        </div>
+
+
+        <button id="verifyBtn" class="btn btn-primary">Verify Signature</button>
+        <button id="clearVerifyBtn" class="btn btn-secondary">Clear</button>
+        <div id="verifyStatus" class="status"></div>
+
+        <div id="verifyOutput" class="output hidden">
+          <div id="verifyResult" class="verify-result"></div>
+          <div id="verifyMessageTextWrapper" class="hidden">
+            <h3>Message:</h3>
+            <div class="textarea-with-copy">
+              <textarea id="verifyMessageText" rows="10" readonly></textarea>
+              <button class="copy-btn" data-target="verifyMessageText" title="Copy to clipboard">📋</button>
+              <button id="clearVerifyBtn" class="btn btn-secondary">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Files Tab -->
+    <div class="tab-content" id="files-tab">
+      <h2>File Encryption</h2>
+
+      <!-- Encrypt File -->
+      <section class="card">
+        <h3>Encrypt a File</h3>
+        <div class="form-group">
+          <label for="fileEncryptRecipientSelect">Recipient's Public Key:</label>
+          <select id="fileEncryptRecipientSelect">
+            <option value="">-- Select an imported public key --</option>
+          </select>
+          <div style="margin-top: 8px;">
+            <label>
+              <input type="checkbox" id="fileEncryptManualKeyToggle">
+              Use manual key entry instead
+            </label>
+          </div>
+        </div>
+        <div class="form-group hidden" id="fileEncryptRecipientManual">
+          <label for="fileEncryptRecipient">Paste recipient's public key:</label>
+          <textarea id="fileEncryptRecipient" rows="4" placeholder="Paste recipient's public key here"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="fileEncryptInput">Select file to encrypt:</label>
+          <input type="file" id="fileEncryptInput">
+        </div>
+        <button id="fileEncryptBtn" class="btn btn-primary">Encrypt File</button>
+        <div id="fileEncryptStatus" class="status"></div>
+      </section>
+
+      <!-- Decrypt File -->
+      <section class="card">
+        <h3>Decrypt a File</h3>
+        <div class="form-group">
+          <label for="fileDecryptKeySelect">Select Your Private Key:</label>
+          <select id="fileDecryptKeySelect"></select>
+        </div>
+        <div class="form-group">
+          <label for="fileDecryptPassphrase">Your Passphrase:</label>
+          <input type="password" id="fileDecryptPassphrase" placeholder="Your key passphrase">
+        </div>
+        <div class="form-group">
+          <label for="fileDecryptInput">Select encrypted file (.pgp):</label>
+          <input type="file" id="fileDecryptInput" accept=".pgp,.asc">
+        </div>
+        <button id="fileDecryptBtn" class="btn btn-primary">Decrypt File</button>
+        <div id="fileDecryptStatus" class="status"></div>
+      </section>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settings-tab">
+      <h2>Settings</h2>
+
+      <!-- Master Password Protection -->
+      <section class="card">
+        <h3>🔒 Master Password Protection</h3>
+        <div id="masterPasswordSection"></div>
+      </section>
+
+      <!-- Backup Keys -->
+      <section class="card">
+        <h3>🗄️ Backup Keys</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Export a backup of your keys to a file. If a master password is set, both keys and the master password
+          verification data will be saved in an encrypted backup file. Import a previously exported backup to restore
+          your keys.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="exportBackupBtn" class="btn btn-secondary">Export Backup Keys</button>
+          <button id="importBackupBtn" class="btn btn-secondary">Import Backup Keys</button>
+        </div>
+        <input type="file" id="importBackupFile" accept=".json" style="display:none">
+        <div id="backupStatus" class="status"></div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p class="version">v5.42</p>
+      <p class="debug-toggle">
+        <label>
+          <input type="checkbox" id="debugMode">
+          Enable Debug Logging
+        </label>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Scripts - Load OpenPGP.js library first, then our PGP handler, then UI script -->
+  <script src="lib/openpgp.min.js"></script>
+  <script src="js/logger.js"></script>
+  <script src="js/pgp-handler.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+
+</html>
