@@ -1,5 +1,5 @@
 {
-  "version": "__VERSION__",
+  "version": "5.42",
   "manifest_version": 2,
   "name": "PGP Suite – Encrypt Messages & Files",
   "description": "Encrypt, decrypt, sign and verify PGP messages and files in Firefox — no external apps needed. Generate key pairs, encrypt any file, secure emails and share files privately. Works with all PGP-compatible tools. No server. No tracking.",

@@ -5,6 +5,7 @@
   "description": "Encrypt, decrypt, sign and verify PGP messages and files in Firefox — no external apps needed. Generate key pairs, encrypt any file, secure emails and share files privately. Works with all PGP-compatible tools. No server. No tracking.",
   "permissions": ["storage", "downloads"],
   "browser_action": {
+    "default_popup": "index.html",
     "default_icon": {
       "64": "icon/icon-64.png",
       "48": "icon/icon-48.png",
@@ -15,7 +16,7 @@
   },
   "web_accessible_resources": ["lib/openpgp.min.js"],
   "background": {
-    "scripts": ["js/background.js"]
+    "scripts": ["js/logger.js", "js/background.js"]
   },
   "sidebar_action": {
     "default_panel": "index.html",
@@ -29,10 +30,14 @@
   },
   "browser_specific_settings": {
     "gecko": {
+      "strict_min_version": "109.0",
       "data_collection_permissions": {
         "required": ["none"]
-      }
+      },
+      "id": "{206be885-3a50-4bbe-9eec-501cb52d1114}"
     },
-    "id": "@OpenPGP"
+    "gecko_android": {
+      "strict_min_version": "113.0"
+    }
   }
 }
