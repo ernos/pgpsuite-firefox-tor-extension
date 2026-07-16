@@ -256,6 +256,41 @@ details:not([open]) .card-summary::after {
   font-size: 14px;
 }
 
+.modal-dialog input[type="text"] {
+  width: 100%;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.modal-dialog textarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.modal-field-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  margin-top: var(--spacing-sm);
+}
+
+.key-comment {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .modal-actions {
   display: flex;
   gap: var(--spacing-sm);

@@ -24,6 +24,25 @@
       </div>
     </div>
 
+    <!-- Edit Key Details Modal -->
+    <div id="editKeyModal" class="modal-overlay hidden">
+      <div class="modal-dialog">
+        <h3>Edit Key Details</h3>
+        <p>Customize how this key is displayed. This does not modify the cryptographic key data.</p>
+        <label class="modal-field-label" for="editKeyName">Name / Label</label>
+        <input type="text" id="editKeyName" placeholder="Name or label for this key" />
+        <label class="modal-field-label" for="editKeyEmail">Email</label>
+        <input type="text" id="editKeyEmail" placeholder="Email address" />
+        <label class="modal-field-label" for="editKeyComment">Comment / Notes</label>
+        <textarea id="editKeyComment" placeholder="Optional notes about this key (e.g. who it belongs to, where it was obtained)" rows="3"></textarea>
+        <div id="editKeyStatus" class="status"></div>
+        <div class="modal-actions">
+          <button id="editKeyOk" class="btn btn-primary">Save</button>
+          <button id="editKeyCancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- First-Time Setup Banner -->
     <div id="firstTimeSetupBanner" class="first-time-banner hidden">
       <div class="first-time-banner-content">
@@ -122,6 +141,23 @@
                 <input type="email" id="keyEmail" placeholder="your.email@example.com">
               </div>
               <div class="form-group">
+                <label for="keyType">Encryption Type:</label>
+                <select id="keyType">
+                  <optgroup label="RSA">
+                    <option value="rsa-2048">RSA 2048-bit</option>
+                    <option value="rsa-3072">RSA 3072-bit</option>
+                    <option value="rsa-4096" selected>RSA 4096-bit</option>
+                    <option value="rsa-8192">RSA 8192-bit</option>
+                  </optgroup>
+                  <optgroup label="ECC (Elliptic Curve)">
+                    <option value="ecc-curve25519">ECC Curve25519 (recommended)</option>
+                    <option value="ecc-p256">ECC NIST P-256</option>
+                    <option value="ecc-p384">ECC NIST P-384</option>
+                    <option value="ecc-p521">ECC NIST P-521</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="form-group">
                 <label for="keyPassphrase">Passphrase:</label>
                 <input type="password" id="keyPassphrase" placeholder="Strong passphrase">
               </div>
@@ -138,7 +174,7 @@
         <div class="form-group">
           <label for="importKey">Import Private or Public Key:</label>
           <div class="textarea-with-copy">
-            <textarea id="importKey" rows="4" placeholder="Paste your private or public key here"></textarea>
+            <textarea id="importKey" rows="4" placeholder="Paste your private or public key here. Importing a private key requires it's passhprase. Use public key importation here to be able to encrypt message to the owner of the private/public key pair."></textarea>
             <button class="copy-btn" data-target="importKey" title="Copy to clipboard">📋</button>
           </div>
         </div>

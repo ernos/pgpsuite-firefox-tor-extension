@@ -202,8 +202,8 @@ class PGPHandler {
    * @param {number} options.keySize - ECC key size (default: 8192)
    * @returns {Promise<Object>} Object containing privateKey, publicKey, and fingerprint
    */
-  async generateKey({ name, email, passphrase, keySize = 8192 }) {
-    debugLog("Starting key generation", { name, email, keySize });
+  async generateKey({ name, email, passphrase, keyType = "rsa", keySize = 4096, curve = "curve25519" }) {
+    debugLog("Starting key generation", { name, email, keyType, keySize, curve });
 
     try {
       // Validate inputs
@@ -213,15 +213,24 @@ class PGPHandler {
 
       debugLog("Calling OpenPGP.generateKey()");
 
+      // Build options based on key type
+      const generateOptions = {
+        userIDs: [{ name, email }],
+        passphrase,
+        format: "armored",
+      };
+
+      if (keyType === "rsa") {
+        generateOptions.type = "rsa";
+        generateOptions.rsaBits = keySize;
+      } else {
+        generateOptions.type = "ecc";
+        generateOptions.curve = curve;
+      }
+
       // Generate key pair using OpenPGP.js
       const { privateKey, publicKey, revocationCertificate } =
-        await openpgp.generateKey({
-          type: "ecc", // ECC algorithm
-          rsaBits: keySize, // Key size in bits
-          userIDs: [{ name, email }], // User identification
-          passphrase, // Passphrase to encrypt private key
-          format: "armored", // ASCII-armored format
-        });
+        await openpgp.generateKey(generateOptions);
 
       debugLog("Key generation successful");
 
@@ -654,6 +663,46 @@ class PGPHandler {
       debugLog("Public key deleted", { remaining: filteredKeys.length });
     } catch (error) {
       errorLog("Failed to delete public key", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update the display metadata (name, email, comment) of a stored public key.
+   * The underlying cryptographic key data is not modified.
+   *
+   * @param {string} fingerprint - Key fingerprint
+   * @param {Object} metadata - Fields to update
+   * @param {string} [metadata.name] - Display name / label
+   * @param {string} [metadata.email] - Email address
+   * @param {string} [metadata.comment] - Free-text notes about this key
+   */
+  async updatePublicKeyMetadata(fingerprint, { name, email, comment }) {
+    debugLog("Updating public key metadata", fingerprint);
+
+    try {
+      const stored = await browser.storage.local.get(
+        this.PUBLIC_KEYS_STORAGE_KEY,
+      );
+      const keys = stored[this.PUBLIC_KEYS_STORAGE_KEY] || [];
+
+      const idx = keys.findIndex((k) => k.fingerprint === fingerprint);
+      if (idx < 0) {
+        throw new Error("Public key not found");
+      }
+
+      keys[idx] = {
+        ...keys[idx],
+        name: name !== undefined ? name : keys[idx].name,
+        email: email !== undefined ? email : keys[idx].email,
+        comment: comment !== undefined ? comment : keys[idx].comment,
+      };
+
+      await browser.storage.local.set({ [this.PUBLIC_KEYS_STORAGE_KEY]: keys });
+
+      debugLog("Public key metadata updated");
+    } catch (error) {
+      errorLog("Failed to update public key metadata", error);
       throw error;
     }
   }

@@ -71,6 +71,71 @@ function passwordPrompt(title, message = "") {
 }
 
 /**
+ * Display a modal dialog to edit the display metadata of a public key.
+ *
+ * @param {Object} current - Current key data { name, email, comment }
+ * @returns {Promise<Object|null>} Updated { name, email, comment } or null if cancelled
+ */
+function editKeyDetailsPrompt(current) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("editKeyModal");
+    const nameInput = document.getElementById("editKeyName");
+    const emailInput = document.getElementById("editKeyEmail");
+    const commentInput = document.getElementById("editKeyComment");
+    const statusEl = document.getElementById("editKeyStatus");
+    const okBtn = document.getElementById("editKeyOk");
+    const cancelBtn = document.getElementById("editKeyCancel");
+
+    // Pre-fill with current values
+    nameInput.value = current.name || "";
+    emailInput.value = current.email || "";
+    commentInput.value = current.comment || "";
+    statusEl.textContent = "";
+    statusEl.style.display = "none";
+
+    modal.classList.remove("hidden");
+    nameInput.focus();
+
+    const cleanup = () => {
+      modal.classList.add("hidden");
+      okBtn.removeEventListener("click", handleOk);
+      cancelBtn.removeEventListener("click", handleCancel);
+      nameInput.removeEventListener("keypress", handleKeypress);
+    };
+
+    const handleOk = () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        statusEl.textContent = "Name / Label is required.";
+        statusEl.className = "status status-error";
+        statusEl.style.display = "block";
+        return;
+      }
+      cleanup();
+      resolve({
+        name,
+        email: emailInput.value.trim(),
+        comment: commentInput.value.trim(),
+      });
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const handleKeypress = (e) => {
+      if (e.key === "Enter") handleOk();
+      else if (e.key === "Escape") handleCancel();
+    };
+
+    okBtn.addEventListener("click", handleOk);
+    cancelBtn.addEventListener("click", handleCancel);
+    nameInput.addEventListener("keypress", handleKeypress);
+  });
+}
+
+/**
  * Display a status message to the user
  *
  * @param {HTMLElement} element - The element to display status in
@@ -609,6 +674,7 @@ class KeyManagement {
     const name = document.getElementById("keyName").value.trim();
     const email = document.getElementById("keyEmail").value.trim();
     const passphrase = document.getElementById("keyPassphrase").value;
+    const keyTypeValue = document.getElementById("keyType").value;
 
     // Validate inputs
     if (!name || !email || !passphrase) {
@@ -632,13 +698,22 @@ class KeyManagement {
     try {
       logger.log("OpenPGP UI", "Calling PGP handler to generate key");
 
-      // Generate the key
-      const result = await pgpHandler.generateKey({
+      // Parse key type selection
+      const [keyAlgo, keyParam] = keyTypeValue.split("-");
+      const keyOptions = {
         name,
         email,
         passphrase,
-        keySize: 16392,
-      });
+        keyType: keyAlgo, // "rsa" or "ecc"
+      };
+      if (keyAlgo === "rsa") {
+        keyOptions.keySize = parseInt(keyParam, 10);
+      } else {
+        keyOptions.curve = keyParam; // e.g. "curve25519", "p256", "p384", "p521"
+      }
+
+      // Generate the key
+      const result = await pgpHandler.generateKey(keyOptions);
 
       if (result.success) {
         logger.log("OpenPGP UI", "Key generated successfully");
@@ -823,6 +898,9 @@ class KeyManagement {
           const ownKeyNote = isOwnKey
             ? `<br><small class="own-key-note">This is the public key of your own private key <code>${shortFp}…</code></small>`
             : "";
+          const commentHtml = key.comment
+            ? `<br><small class="key-comment">📝 ${this.escapeHtml(key.comment)}</small>`
+            : "";
 
           html += `
       <div class="key-item${isOwnKey ? " key-item-own" : ""}" data-fingerprint="${key.fingerprint}">
@@ -832,10 +910,14 @@ class KeyManagement {
               <br>
               <small>Fingerprint: <code>${key.fingerprint}</code></small>
               ${ownKeyNote}
+              ${commentHtml}
               <br>
               <small>Imported: ${new Date(key.created).toLocaleString()}</small>
           </div>
           <div class="key-actions">
+              <button class="btn btn-small btn-secondary edit-public-key" data-fingerprint="${key.fingerprint}">
+                  Edit
+              </button>
               <button class="btn btn-small btn-secondary export-public-key" data-fingerprint="${key.fingerprint}">
                   Export
               </button>
@@ -850,6 +932,13 @@ class KeyManagement {
         this.publickeysList.innerHTML = html;
 
         // Register click listeners for the individual public keys
+        this.publickeysList
+          .querySelectorAll(".edit-public-key")
+          .forEach((btn) => {
+            btn.addEventListener("click", (e) =>
+              this.editPublicKeyDetails(e.target.dataset.fingerprint),
+            );
+          });
         this.publickeysList
           .querySelectorAll(".export-public-key")
           .forEach((btn) => {
@@ -1161,6 +1250,40 @@ class KeyManagement {
     } catch (error) {
       logger.error("OpenPGP UI", "Error exporting public key:", error);
       alert("Error exporting public key: " + error.message);
+    }
+  }
+
+  /**
+   * Edit display metadata (name, email, comment) of a stored public key
+   *
+   * @param {string} fingerprint - Key fingerprint
+   */
+  async editPublicKeyDetails(fingerprint) {
+    logger.log("OpenPGP UI", "Edit public key details requested:", fingerprint);
+
+    try {
+      const key = await pgpHandler.getPublicKeyByFingerprint(fingerprint);
+      if (!key) {
+        alert("Key not found.");
+        return;
+      }
+
+      const updated = await editKeyDetailsPrompt({
+        name: key.name,
+        email: key.email,
+        comment: key.comment || "",
+      });
+
+      if (!updated) {
+        return; // User cancelled
+      }
+
+      await pgpHandler.updatePublicKeyMetadata(fingerprint, updated);
+      logger.log("OpenPGP UI", "Public key metadata updated successfully");
+      await this.refreshPublicKeys();
+    } catch (error) {
+      logger.error("OpenPGP UI", "Error editing public key details:", error);
+      alert("Error saving changes: " + error.message);
     }
   }
 
