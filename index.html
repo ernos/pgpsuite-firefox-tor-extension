@@ -24,6 +24,25 @@
       </div>
     </div>
 
+    <!-- Edit Key Details Modal -->
+    <div id="editKeyModal" class="modal-overlay hidden">
+      <div class="modal-dialog">
+        <h3>Edit Key Details</h3>
+        <p>Customize how this key is displayed. This does not modify the cryptographic key data.</p>
+        <label class="modal-field-label" for="editKeyName">Name / Label</label>
+        <input type="text" id="editKeyName" placeholder="Name or label for this key" />
+        <label class="modal-field-label" for="editKeyEmail">Email</label>
+        <input type="text" id="editKeyEmail" placeholder="Email address" />
+        <label class="modal-field-label" for="editKeyComment">Comment / Notes</label>
+        <textarea id="editKeyComment" placeholder="Optional notes about this key (e.g. who it belongs to, where it was obtained)" rows="3"></textarea>
+        <div id="editKeyStatus" class="status"></div>
+        <div class="modal-actions">
+          <button id="editKeyOk" class="btn btn-primary">Save</button>
+          <button id="editKeyCancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- First-Time Setup Banner -->
     <div id="firstTimeSetupBanner" class="first-time-banner hidden">
       <div class="first-time-banner-content">
@@ -61,6 +80,7 @@
       <button class="tab-button" data-tab="verify">Verify</button>
       <button class="tab-button" data-tab="files">Files</button>
       <button class="tab-button" data-tab="settings">Settings</button>
+      <button class="tab-button" data-tab="vault">Persistent Vault</button>
     </nav>
 
     <!-- Keys Tab -->
@@ -122,6 +142,23 @@
                 <input type="email" id="keyEmail" placeholder="your.email@example.com">
               </div>
               <div class="form-group">
+                <label for="keyType">Encryption Type:</label>
+                <select id="keyType">
+                  <optgroup label="RSA">
+                    <option value="rsa-2048">RSA 2048-bit</option>
+                    <option value="rsa-3072">RSA 3072-bit</option>
+                    <option value="rsa-4096" selected>RSA 4096-bit</option>
+                    <option value="rsa-8192">RSA 8192-bit</option>
+                  </optgroup>
+                  <optgroup label="ECC (Elliptic Curve)">
+                    <option value="ecc-curve25519">ECC Curve25519 (recommended)</option>
+                    <option value="ecc-p256">ECC NIST P-256</option>
+                    <option value="ecc-p384">ECC NIST P-384</option>
+                    <option value="ecc-p521">ECC NIST P-521</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="form-group">
                 <label for="keyPassphrase">Passphrase:</label>
                 <input type="password" id="keyPassphrase" placeholder="Strong passphrase">
               </div>
@@ -138,7 +175,7 @@
         <div class="form-group">
           <label for="importKey">Import Private or Public Key:</label>
           <div class="textarea-with-copy">
-            <textarea id="importKey" rows="4" placeholder="Paste your private or public key here"></textarea>
+            <textarea id="importKey" rows="4" placeholder="Paste your private or public key here. Importing a private key requires it's passhprase. Use public key importation here to be able to encrypt message to the owner of the private/public key pair."></textarea>
             <button class="copy-btn" data-target="importKey" title="Copy to clipboard">📋</button>
           </div>
         </div>
@@ -454,6 +491,44 @@
         <input type="file" id="importBackupFile" accept=".json" style="display:none">
         <div id="backupStatus" class="status"></div>
       </section>
+    </div>
+
+    <!-- Persistent Vault Tab -->
+    <div class="tab-content" id="vault-tab">
+      <h2>🔐 Persistent Vault</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        Store sensitive notes or credentials encrypted with your PGP key. Data is saved persistently in the browser and
+        can only be accessed with the correct private key and passphrase.
+      </p>
+
+      <!-- New Entry Form -->
+      <section class="card">
+        <h3>Add New Entry</h3>
+        <div class="form-group">
+          <label for="vaultNewLabel">Entry Label:</label>
+          <input type="text" id="vaultNewLabel" placeholder="e.g. GitHub Login, Bank Account, Server SSH...">
+        </div>
+        <div class="form-group">
+          <label for="vaultKeySelect">Encrypt with your key:</label>
+          <select id="vaultKeySelect">
+            <option value="">-- Select your private key --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="vaultNewContent">Content to encrypt:</label>
+          <textarea id="vaultNewContent" rows="6" placeholder="Enter sensitive content here (username, password, notes, etc.)..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="vaultSaveNewEntryBtn" class="btn btn-primary">Encrypt &amp; Save</button>
+          <button id="vaultClearNewFormBtn" class="btn btn-secondary">Clear</button>
+        </div>
+        <div id="vaultNewEntryStatus" class="status"></div>
+      </section>
+
+      <!-- Vault Entries List -->
+      <div id="vaultEntriesList">
+        <p class="text-muted" style="padding:16px 0;">No vault entries yet. Create your first entry above.</p>
+      </div>
     </div>
 
     <!-- Footer -->
