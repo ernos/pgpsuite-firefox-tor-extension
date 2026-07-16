@@ -7,8 +7,9 @@
 
 logger.log("OpenPGP UI", "Initializing UI controller");
 
-// Module-level reference set during DOMContentLoaded so TabManager can reach it
+// Module-level references set during DOMContentLoaded so TabManager can reach them
 let fileController;
+let vaultController;
 
 /**
  * Display a password prompt modal dialog
@@ -220,6 +221,11 @@ class TabManager {
         // fileController is set after TabManager init; access via global scope
         if (typeof fileController !== "undefined") {
           fileController.refreshKeyDropdowns();
+        }
+      }
+      if (tabName === "vault") {
+        if (typeof vaultController !== "undefined") {
+          vaultController.refreshVault();
         }
       }
     }
@@ -437,9 +443,8 @@ class KeyManagement {
       */
       section.innerHTML = `
         <p style="color:var(--success-color);font-size:12px;margin-bottom:8px">✓ Private keys are encrypted in storage.</p>
-        ${
-          isUnlocked
-            ? `
+        ${isUnlocked
+          ? `
           <div class="form-group">
             <input type="password" id="newMasterPwdInput" placeholder="New master password" style="margin-bottom:6px">
             <button id="changeMasterPwdBtn" class="btn btn-secondary btn-small">Change Password</button>
@@ -448,7 +453,7 @@ class KeyManagement {
             <div id="masterPwdSetStatus" class="status"></div>
           </div>
         `
-            : `
+          : `
           <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Unlock above to change or disable.</p>
           <button id="disableMasterPwdAndDeleteKeysBtn" class="btn btn-danger btn-small">Forgot Password? Delete All Keys</button>
           <div id="masterPwdSetStatus" class="status"></div>
@@ -1141,8 +1146,8 @@ class KeyManagement {
     logger.log(
       "OpenPGP UI",
       "Copied encryptedText to clipboard! Contents: '" +
-        textarea.innerHTML +
-        "'",
+      textarea.innerHTML +
+      "'",
     );
     return this.copyToClipboard(textarea.innerHTML);
   }
@@ -2577,6 +2582,387 @@ class ReviewNagController {
 }
 
 /**
+ * Persistent Vault Controller
+ *
+ * Allows users to encrypt sensitive notes/credentials with one of their own
+ * private keys and store them persistently in browser.storage.local.
+ * Entries can only be edited or deleted after successful decryption.
+ */
+class VaultController {
+  constructor() {
+    this.VAULT_STORAGE_KEY = "MiniPGP_vault";
+    // In-session map of decrypted entry content: { [id]: plaintextString }
+    this._decryptedEntries = {};
+    this._init();
+  }
+
+  _init() {
+    document
+      .getElementById("vaultSaveNewEntryBtn")
+      .addEventListener("click", () => this.saveNewEntry());
+
+    document
+      .getElementById("vaultClearNewFormBtn")
+      .addEventListener("click", () => {
+        document.getElementById("vaultNewLabel").value = "";
+        document.getElementById("vaultNewContent").value = "";
+        document.getElementById("vaultKeySelect").value = "";
+        clearStatus(document.getElementById("vaultNewEntryStatus"));
+      });
+
+    // Allow Enter key in vault label to trigger save
+    document
+      .getElementById("vaultNewLabel")
+      .addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          document.getElementById("vaultSaveNewEntryBtn").click();
+        }
+      });
+
+    this.refreshVault();
+  }
+
+  async refreshVault() {
+    await this.refreshKeyDropdown();
+    await this.renderEntries();
+  }
+
+  async refreshKeyDropdown() {
+    const privateKeys = await pgpHandler.getAllKeys();
+    const dropdown = document.getElementById("vaultKeySelect");
+    const previousValue = dropdown.value;
+    dropdown.innerHTML =
+      '<option value="">-- Select your private key --</option>';
+    privateKeys.forEach((key) => {
+      const option = document.createElement("option");
+      option.value = key.fingerprint;
+      option.textContent = `${key.name} <${key.email}> (${key.fingerprint.substring(0, 16)}...)`;
+      dropdown.appendChild(option);
+    });
+    // Restore selection if key still present
+    if (previousValue) dropdown.value = previousValue;
+  }
+
+  async getVaultEntries() {
+    try {
+      const stored = await browser.storage.local.get(this.VAULT_STORAGE_KEY);
+      return stored[this.VAULT_STORAGE_KEY] || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async saveVaultEntries(entries) {
+    await browser.storage.local.set({ [this.VAULT_STORAGE_KEY]: entries });
+  }
+
+  _escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  async saveNewEntry() {
+    const statusEl = document.getElementById("vaultNewEntryStatus");
+    const label = document.getElementById("vaultNewLabel").value.trim();
+    const fingerprint = document.getElementById("vaultKeySelect").value;
+    const content = document.getElementById("vaultNewContent").value;
+
+    if (!label) {
+      showStatus(statusEl, "Please enter a label for this entry", "error");
+      return;
+    }
+    if (!fingerprint) {
+      showStatus(
+        statusEl,
+        "Please select a key to encrypt with",
+        "error",
+      );
+      return;
+    }
+    if (!content.trim()) {
+      showStatus(statusEl, "Please enter content to encrypt", "error");
+      return;
+    }
+
+    showStatus(statusEl, "Encrypting...", "info");
+    const saveBtn = document.getElementById("vaultSaveNewEntryBtn");
+    saveBtn.disabled = true;
+
+    try {
+      const keyData = await pgpHandler.getKeyByFingerprint(fingerprint);
+      if (!keyData) throw new Error("Key not found");
+
+      const result = await pgpHandler.encrypt({
+        message: content,
+        publicKey: keyData.publicKey,
+      });
+      if (!result.success) throw new Error(result.error);
+
+      const entries = await this.getVaultEntries();
+      entries.push({
+        id: crypto.randomUUID(),
+        label,
+        keyFingerprint: fingerprint,
+        keyName: `${keyData.name} <${keyData.email}>`,
+        encryptedData: result.encrypted,
+        created: new Date().toISOString(),
+      });
+      await this.saveVaultEntries(entries);
+
+      document.getElementById("vaultNewLabel").value = "";
+      document.getElementById("vaultNewContent").value = "";
+      document.getElementById("vaultKeySelect").value = "";
+      showStatus(statusEl, "Entry saved successfully!", "success");
+
+      await this.renderEntries();
+    } catch (err) {
+      showStatus(statusEl, `Error: ${err.message}`, "error");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
+  async renderEntries() {
+    const entries = await this.getVaultEntries();
+    const container = document.getElementById("vaultEntriesList");
+    container.innerHTML = "";
+
+    if (entries.length === 0) {
+      const p = document.createElement("p");
+      p.className = "text-muted";
+      p.style.padding = "16px 0";
+      p.textContent =
+        "No vault entries yet. Create your first entry above.";
+      container.appendChild(p);
+      return;
+    }
+
+    entries.forEach((entry) => {
+      const isUnlocked = entry.id in this._decryptedEntries;
+      const card = document.createElement("section");
+      card.className = "card vault-entry";
+      card.id = `vault-entry-${entry.id}`;
+
+      // Header
+      const header = document.createElement("div");
+      header.className = "vault-entry-header";
+      header.innerHTML = `
+        <h3>${isUnlocked ? "🔓" : "🔒"} ${this._escapeHtml(entry.label)}</h3>
+        <small style="color:var(--text-muted)">
+          Key: ${this._escapeHtml(entry.keyName)} &nbsp;|&nbsp;
+          Added: ${new Date(entry.created).toLocaleString()}
+        </small>
+      `;
+      card.appendChild(header);
+
+      if (!isUnlocked) {
+        // ── Locked state ──────────────────────────────────────────────
+        const lockedDiv = document.createElement("div");
+        lockedDiv.style.marginTop = "12px";
+
+        const pwLabel = document.createElement("label");
+        pwLabel.textContent = "Passphrase to unlock:";
+        pwLabel.style.display = "block";
+        pwLabel.style.marginBottom = "4px";
+
+        const pwInput = document.createElement("input");
+        pwInput.type = "password";
+        pwInput.id = `vault-passphrase-${entry.id}`;
+        pwInput.placeholder = "Key passphrase";
+        pwInput.style.cssText = "width:100%;margin-bottom:8px;";
+
+        const unlockBtn = document.createElement("button");
+        unlockBtn.className = "btn btn-primary";
+        unlockBtn.textContent = "Unlock & Edit";
+        unlockBtn.addEventListener("click", () =>
+          this.decryptEntry(entry.id),
+        );
+
+        const statusEl = document.createElement("div");
+        statusEl.className = "status";
+        statusEl.id = `vault-status-${entry.id}`;
+
+        pwInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.decryptEntry(entry.id);
+          }
+        });
+
+        lockedDiv.appendChild(pwLabel);
+        lockedDiv.appendChild(pwInput);
+        lockedDiv.appendChild(unlockBtn);
+        lockedDiv.appendChild(statusEl);
+        card.appendChild(lockedDiv);
+      } else {
+        // ── Unlocked / editing state ───────────────────────────────────
+        const unlockedDiv = document.createElement("div");
+        unlockedDiv.style.marginTop = "12px";
+
+        const contentLabel = document.createElement("label");
+        contentLabel.textContent =
+          "Content (editable — click Re-encrypt & Save to persist changes):";
+        contentLabel.style.display = "block";
+        contentLabel.style.marginBottom = "4px";
+
+        const textarea = document.createElement("textarea");
+        textarea.id = `vault-content-${entry.id}`;
+        textarea.rows = 8;
+        textarea.style.width = "100%";
+        textarea.value = this._decryptedEntries[entry.id];
+
+        const actionsDiv = document.createElement("div");
+        actionsDiv.style.cssText =
+          "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;";
+
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "btn btn-primary";
+        saveBtn.textContent = "Re-encrypt & Save";
+        saveBtn.addEventListener("click", () =>
+          this.saveUpdatedEntry(entry.id),
+        );
+
+        const lockBtn = document.createElement("button");
+        lockBtn.className = "btn btn-secondary";
+        lockBtn.textContent = "Lock";
+        lockBtn.addEventListener("click", () => this.lockEntry(entry.id));
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn-danger";
+        deleteBtn.textContent = "Delete Entry";
+        deleteBtn.addEventListener("click", () =>
+          this.deleteEntry(entry.id),
+        );
+
+        const saveStatusEl = document.createElement("div");
+        saveStatusEl.className = "status";
+        saveStatusEl.id = `vault-save-status-${entry.id}`;
+
+        actionsDiv.appendChild(saveBtn);
+        actionsDiv.appendChild(lockBtn);
+        actionsDiv.appendChild(deleteBtn);
+
+        unlockedDiv.appendChild(contentLabel);
+        unlockedDiv.appendChild(textarea);
+        unlockedDiv.appendChild(actionsDiv);
+        unlockedDiv.appendChild(saveStatusEl);
+        card.appendChild(unlockedDiv);
+      }
+
+      container.appendChild(card);
+    });
+  }
+
+  async decryptEntry(id) {
+    const statusEl = document.getElementById(`vault-status-${id}`);
+    const pwInput = document.getElementById(`vault-passphrase-${id}`);
+    if (!pwInput) return;
+
+    const passphrase = pwInput.value;
+    if (!passphrase) {
+      showStatus(statusEl, "Please enter your passphrase", "error");
+      return;
+    }
+
+    const unlockBtn = document
+      .getElementById(`vault-entry-${id}`)
+      ?.querySelector(".btn.btn-primary");
+    if (unlockBtn) unlockBtn.disabled = true;
+
+    try {
+      const entries = await this.getVaultEntries();
+      const entry = entries.find((e) => e.id === id);
+      if (!entry) throw new Error("Vault entry not found");
+
+      const result = await pgpHandler.decrypt({
+        encrypted: entry.encryptedData,
+        privateKeyFingerprint: entry.keyFingerprint,
+        passphrase,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Decryption failed");
+      }
+
+      this._decryptedEntries[id] = result.decrypted;
+      await this.renderEntries();
+    } catch (err) {
+      if (unlockBtn) unlockBtn.disabled = false;
+      showStatus(statusEl, `Error: ${err.message}`, "error");
+    }
+  }
+
+  async saveUpdatedEntry(id) {
+    const statusEl = document.getElementById(`vault-save-status-${id}`);
+    const textarea = document.getElementById(`vault-content-${id}`);
+    const newContent = textarea
+      ? textarea.value
+      : this._decryptedEntries[id];
+
+    showStatus(statusEl, "Re-encrypting...", "info");
+
+    try {
+      const entries = await this.getVaultEntries();
+      const idx = entries.findIndex((e) => e.id === id);
+      if (idx < 0) throw new Error("Entry not found");
+
+      const entry = entries[idx];
+      const keyData = await pgpHandler.getKeyByFingerprint(
+        entry.keyFingerprint,
+      );
+      if (!keyData) throw new Error("Key not found");
+
+      const result = await pgpHandler.encrypt({
+        message: newContent,
+        publicKey: keyData.publicKey,
+      });
+      if (!result.success) throw new Error(result.error);
+
+      entries[idx] = { ...entry, encryptedData: result.encrypted };
+      await this.saveVaultEntries(entries);
+
+      // Keep the in-session decrypted copy up-to-date
+      this._decryptedEntries[id] = newContent;
+
+      showStatus(statusEl, "Entry saved successfully!", "success");
+    } catch (err) {
+      showStatus(statusEl, `Error: ${err.message}`, "error");
+    }
+  }
+
+  lockEntry(id) {
+    delete this._decryptedEntries[id];
+    this.renderEntries();
+  }
+
+  async deleteEntry(id) {
+    if (!(id in this._decryptedEntries)) {
+      alert(
+        "You must unlock (decrypt) this entry before you can delete it.",
+      );
+      return;
+    }
+    if (
+      !confirm(
+        "Are you sure you want to permanently delete this vault entry? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    try {
+      const entries = await this.getVaultEntries();
+      await this.saveVaultEntries(entries.filter((e) => e.id !== id));
+      delete this._decryptedEntries[id];
+      await this.renderEntries();
+    } catch (err) {
+      alert(`Error deleting entry: ${err.message}`);
+    }
+  }
+}
+
+/**
  * Initialize all controllers when DOM is ready
  */
 document.addEventListener("DOMContentLoaded", () => {
@@ -2591,6 +2977,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const verificationController = new VerificationController();
   fileController = new FileController();
   const settingsController = new SettingsController();
+  vaultController = new VaultController();
   const reviewNagController = new ReviewNagController();
 
   // Set up debug mode toggle

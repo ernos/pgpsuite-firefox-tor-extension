@@ -80,6 +80,7 @@
       <button class="tab-button" data-tab="verify">Verify</button>
       <button class="tab-button" data-tab="files">Files</button>
       <button class="tab-button" data-tab="settings">Settings</button>
+      <button class="tab-button" data-tab="vault">Persistent Vault</button>
     </nav>
 
     <!-- Keys Tab -->
@@ -490,6 +491,44 @@
         <input type="file" id="importBackupFile" accept=".json" style="display:none">
         <div id="backupStatus" class="status"></div>
       </section>
+    </div>
+
+    <!-- Persistent Vault Tab -->
+    <div class="tab-content" id="vault-tab">
+      <h2>🔐 Persistent Vault</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        Store sensitive notes or credentials encrypted with your PGP key. Data is saved persistently in the browser and
+        can only be accessed with the correct private key and passphrase.
+      </p>
+
+      <!-- New Entry Form -->
+      <section class="card">
+        <h3>Add New Entry</h3>
+        <div class="form-group">
+          <label for="vaultNewLabel">Entry Label:</label>
+          <input type="text" id="vaultNewLabel" placeholder="e.g. GitHub Login, Bank Account, Server SSH...">
+        </div>
+        <div class="form-group">
+          <label for="vaultKeySelect">Encrypt with your key:</label>
+          <select id="vaultKeySelect">
+            <option value="">-- Select your private key --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="vaultNewContent">Content to encrypt:</label>
+          <textarea id="vaultNewContent" rows="6" placeholder="Enter sensitive content here (username, password, notes, etc.)..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="vaultSaveNewEntryBtn" class="btn btn-primary">Encrypt &amp; Save</button>
+          <button id="vaultClearNewFormBtn" class="btn btn-secondary">Clear</button>
+        </div>
+        <div id="vaultNewEntryStatus" class="status"></div>
+      </section>
+
+      <!-- Vault Entries List -->
+      <div id="vaultEntriesList">
+        <p class="text-muted" style="padding:16px 0;">No vault entries yet. Create your first entry above.</p>
+      </div>
     </div>
 
     <!-- Footer -->
