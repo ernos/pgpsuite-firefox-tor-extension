@@ -1,1 +1,1 @@
-Add a "Clear" button to tabs "Import/Export" "Encrypt", "Decrypt","Sign".
+

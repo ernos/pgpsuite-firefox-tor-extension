@@ -287,6 +287,14 @@ class KeyManagement {
     this.refreshBtn.addEventListener("click", () => this.refreshKeys());
     this.importBtn.addEventListener("click", () => this.importKey());
 
+    document
+      .getElementById("clearImportKeyBtn")
+      .addEventListener("click", () => {
+        document.getElementById("importKey").value = "";
+        document.getElementById("importPassphrase").value = "";
+        clearStatus(document.getElementById("importStatus"));
+      });
+
     // Trigger generate when Enter is pressed in passphrase field
     document
       .getElementById("keyPassphrase")
@@ -1497,16 +1505,17 @@ class EncryptionController {
     });
 
     document
-      .getElementById("copyEncryptedBtn")
-      .addEventListener("click", () => {
-        this.updateClipboard("encryptedText");
-      });
-
-    document
       .getElementById("clearEncryptedBtn")
       .addEventListener("click", () => {
         document.getElementById("encryptedText").value = "";
         setVisible(document.getElementById("encryptedOutput"), false);
+        clearStatus(document.getElementById("encryptStatus"));
+      });
+
+    document
+      .getElementById("clearEncryptMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("encryptMessage").value = "";
         clearStatus(document.getElementById("encryptStatus"));
       });
 
@@ -1648,11 +1657,6 @@ class DecryptionController {
     this.manualKeySection = document.getElementById("decryptVerifyKeyManual");
 
     this.decryptBtn.addEventListener("click", () => this.decrypt());
-    document
-      .getElementById("copyDecryptedBtn")
-      .addEventListener("click", () => {
-        this.copyToClipboard("decryptedText");
-      });
 
     document
       .getElementById("clearDecryptedBtn")
@@ -1660,6 +1664,13 @@ class DecryptionController {
         document.getElementById("decryptedText").value = "";
         document.getElementById("signatureInfo").innerHTML = "";
         setVisible(document.getElementById("decryptedOutput"), false);
+        clearStatus(document.getElementById("decryptStatus"));
+      });
+
+    document
+      .getElementById("clearDecryptMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("decryptMessage").value = "";
         clearStatus(document.getElementById("decryptStatus"));
       });
 
@@ -1800,15 +1811,19 @@ class SigningController {
     this.signBtn = document.getElementById("signBtn");
 
     this.signBtn.addEventListener("click", () => this.sign());
-    document.getElementById("copySignedBtn").addEventListener("click", () => {
-      this.copyToClipboard("signedText");
-    });
 
     document.getElementById("clearSignedBtn").addEventListener("click", () => {
       document.getElementById("signedText").value = "";
       setVisible(document.getElementById("signedOutput"), false);
       clearStatus(document.getElementById("signStatus"));
     });
+
+    document
+      .getElementById("clearSignMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("signMessage").value = "";
+        clearStatus(document.getElementById("signStatus"));
+      });
 
     // Trigger sign when Enter is pressed in passphrase field
     document
@@ -1908,12 +1923,20 @@ class VerificationController {
     this.verifyBtn.addEventListener("click", () => this.verify());
 
     document.getElementById("clearVerifyBtn").addEventListener("click", () => {
+      document.getElementById("verifyMessage").value = "";
       document.getElementById("verifyResult").innerHTML = "";
       document.getElementById("verifyMessageText").value = "";
       setVisible(document.getElementById("verifyMessageTextWrapper"), false);
       setVisible(document.getElementById("verifyOutput"), false);
       clearStatus(document.getElementById("verifyStatus"));
     });
+
+    const clearVerifyBtn2 = document.getElementById("clearVerifyBtn2");
+    if (clearVerifyBtn2) {
+      clearVerifyBtn2.addEventListener("click", () => {
+        document.getElementById("clearVerifyBtn").click();
+      });
+    }
   }
 
   /**
