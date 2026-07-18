@@ -1,4 +1,4 @@
-# PGP Suite - v6.0 Release Notes
+# PGP Suite - v6.2 Release Notes
 
 ## Changes
 

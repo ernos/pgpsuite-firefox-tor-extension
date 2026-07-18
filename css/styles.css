@@ -530,6 +530,12 @@ textarea {
   color: white;
 }
 
+.btn.copied {
+  background-color: #90EE90;
+  border-color: #90EE90;
+  color: #1a1a1a;
+}
+
 select {
   cursor: pointer;
 }
