@@ -372,9 +372,8 @@ class KeyManagement {
       */
       section.innerHTML = `
         <p style="color:var(--success-color);font-size:12px;margin-bottom:8px">✓ Private keys are encrypted in storage.</p>
-        ${
-          isUnlocked
-            ? `
+        ${isUnlocked
+          ? `
           <div class="form-group">
             <input type="password" id="newMasterPwdInput" placeholder="New master password" style="margin-bottom:6px">
             <button id="changeMasterPwdBtn" class="btn btn-secondary btn-small">Change Password</button>
@@ -383,7 +382,7 @@ class KeyManagement {
             <div id="masterPwdSetStatus" class="status"></div>
           </div>
         `
-            : `
+          : `
           <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Unlock above to change or disable.</p>
           <button id="disableMasterPwdAndDeleteKeysBtn" class="btn btn-danger btn-small">Forgot Password? Delete All Keys</button>
           <div id="masterPwdSetStatus" class="status"></div>
@@ -1052,8 +1051,8 @@ class KeyManagement {
     logger.log(
       "OpenPGP UI",
       "Copied encryptedText to clipboard! Contents: '" +
-        textarea.innerHTML +
-        "'",
+      textarea.innerHTML +
+      "'",
     );
     return this.copyToClipboard(textarea.innerHTML);
   }
@@ -1520,11 +1519,6 @@ class DecryptionController {
     this.manualKeySection = document.getElementById("decryptVerifyKeyManual");
 
     this.decryptBtn.addEventListener("click", () => this.decrypt());
-    document
-      .getElementById("copyDecryptedBtn")
-      .addEventListener("click", () => {
-        this.copyToClipboard("decryptedText");
-      });
 
     document
       .getElementById("clearDecryptedBtn")
@@ -1672,9 +1666,6 @@ class SigningController {
     this.signBtn = document.getElementById("signBtn");
 
     this.signBtn.addEventListener("click", () => this.sign());
-    document.getElementById("copySignedBtn").addEventListener("click", () => {
-      this.copyToClipboard("signedText");
-    });
 
     document.getElementById("clearSignedBtn").addEventListener("click", () => {
       document.getElementById("signedText").value = "";
