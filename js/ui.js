@@ -162,6 +162,32 @@ function clearStatus(element) {
 }
 
 /**
+ * Copy textarea contents to clipboard with visual button feedback.
+ *
+ * @param {string} textareaId - The id of the textarea to copy from
+ * @param {HTMLElement} btn - The button element to show feedback on
+ */
+async function copyWithFeedback(textareaId, btn) {
+  const el = document.getElementById(textareaId);
+  const originalText = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(el.value);
+    btn.classList.add("copied");
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.textContent = originalText;
+    }, 2000);
+  } catch (e) {
+    el.select();
+    btn.textContent = "Press Ctrl+C";
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  }
+}
+
+/**
  * Show/hide an element
  *
  * @param {HTMLElement} element - The element to show/hide
@@ -286,6 +312,12 @@ class KeyManagement {
     this.generateBtn.addEventListener("click", () => this.generateKey());
     this.refreshBtn.addEventListener("click", () => this.refreshKeys());
     this.importBtn.addEventListener("click", () => this.importKey());
+
+    document
+      .getElementById("copyImportKeyBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("importKey", this);
+      });
 
     document
       .getElementById("clearImportKeyBtn")
@@ -1505,11 +1537,23 @@ class EncryptionController {
     });
 
     document
+      .getElementById("copyEncryptedOutputBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("encryptedText", this);
+      });
+
+    document
       .getElementById("clearEncryptedBtn")
       .addEventListener("click", () => {
         document.getElementById("encryptedText").value = "";
         setVisible(document.getElementById("encryptedOutput"), false);
         clearStatus(document.getElementById("encryptStatus"));
+      });
+
+    document
+      .getElementById("copyEncryptMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("encryptMessage", this);
       });
 
     document
@@ -1659,12 +1703,24 @@ class DecryptionController {
     this.decryptBtn.addEventListener("click", () => this.decrypt());
 
     document
+      .getElementById("copyDecryptedOutputBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("decryptedText", this);
+      });
+
+    document
       .getElementById("clearDecryptedBtn")
       .addEventListener("click", () => {
         document.getElementById("decryptedText").value = "";
         document.getElementById("signatureInfo").innerHTML = "";
         setVisible(document.getElementById("decryptedOutput"), false);
         clearStatus(document.getElementById("decryptStatus"));
+      });
+
+    document
+      .getElementById("copyDecryptMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("decryptMessage", this);
       });
 
     document
@@ -1817,6 +1873,12 @@ class SigningController {
       setVisible(document.getElementById("signedOutput"), false);
       clearStatus(document.getElementById("signStatus"));
     });
+
+    document
+      .getElementById("copySignMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("signMessage", this);
+      });
 
     document
       .getElementById("clearSignMessageBtn")
