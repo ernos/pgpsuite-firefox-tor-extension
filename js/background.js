@@ -15,12 +15,8 @@ logger.log("OpenPGP Background", "Background script initializing");
  * On desktop: opens the sidebar. On Android: popup opens automatically via manifest default_popup.
  */
 browser.browserAction.onClicked.addListener(() => {
-  logger.log("OpenPGP Background", "Toolbar icon clicked, opening sidebar");
-  if (browser.sidebarAction) {
-    browser.sidebarAction.open().catch((err) => {
-      logger.error("OpenPGP Background", "Failed to open sidebar:", err);
-    });
-  }
+  logger.log("OpenPGP Background", "Toolbar icon clicked, opening new tab");
+  browser.tabs.create({ url: browser.runtime.getURL("index.html") });
 });
 
 /**
@@ -60,7 +56,7 @@ browser.runtime.onInstalled.addListener((details) => {
 browser.runtime.onStartup.addListener(() => {
   logger.log("OpenPGP Background", "Browser started, extension active");
   // In-memory master password cannot survive a browser restart; notify sidebar just in case
-  browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => {});
+  browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => { });
 
   // Ensure install date is recorded for users upgrading from older versions
   browser.storage.local.get("firegpg_install_date").then((result) => {
@@ -327,7 +323,7 @@ browser.runtime.onSuspend.addListener(() => {
     "OpenPGP Background",
     "Extension suspending — locking master password",
   );
-  browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => {});
+  browser.runtime.sendMessage({ type: "lockMasterPassword" }).catch(() => { });
 });
 
 /**
