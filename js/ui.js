@@ -162,6 +162,32 @@ function clearStatus(element) {
 }
 
 /**
+ * Copy textarea contents to clipboard with visual button feedback.
+ *
+ * @param {string} textareaId - The id of the textarea to copy from
+ * @param {HTMLElement} btn - The button element to show feedback on
+ */
+async function copyWithFeedback(textareaId, btn) {
+  const el = document.getElementById(textareaId);
+  const originalText = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(el.value);
+    btn.classList.add("copied");
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.textContent = originalText;
+    }, 2000);
+  } catch (e) {
+    el.select();
+    btn.textContent = "Press Ctrl+C";
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  }
+}
+
+/**
  * Show/hide an element
  *
  * @param {HTMLElement} element - The element to show/hide
@@ -286,6 +312,20 @@ class KeyManagement {
     this.generateBtn.addEventListener("click", () => this.generateKey());
     this.refreshBtn.addEventListener("click", () => this.refreshKeys());
     this.importBtn.addEventListener("click", () => this.importKey());
+
+    document
+      .getElementById("copyImportKeyBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("importKey", this);
+      });
+
+    document
+      .getElementById("clearImportKeyBtn")
+      .addEventListener("click", () => {
+        document.getElementById("importKey").value = "";
+        document.getElementById("importPassphrase").value = "";
+        clearStatus(document.getElementById("importStatus"));
+      });
 
     // Trigger generate when Enter is pressed in passphrase field
     document
@@ -1497,9 +1537,9 @@ class EncryptionController {
     });
 
     document
-      .getElementById("copyEncryptedBtn")
-      .addEventListener("click", () => {
-        this.updateClipboard("encryptedText");
+      .getElementById("copyEncryptedOutputBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("encryptedText", this);
       });
 
     document
@@ -1507,6 +1547,19 @@ class EncryptionController {
       .addEventListener("click", () => {
         document.getElementById("encryptedText").value = "";
         setVisible(document.getElementById("encryptedOutput"), false);
+        clearStatus(document.getElementById("encryptStatus"));
+      });
+
+    document
+      .getElementById("copyEncryptMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("encryptMessage", this);
+      });
+
+    document
+      .getElementById("clearEncryptMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("encryptMessage").value = "";
         clearStatus(document.getElementById("encryptStatus"));
       });
 
@@ -1648,10 +1701,11 @@ class DecryptionController {
     this.manualKeySection = document.getElementById("decryptVerifyKeyManual");
 
     this.decryptBtn.addEventListener("click", () => this.decrypt());
+
     document
-      .getElementById("copyDecryptedBtn")
-      .addEventListener("click", () => {
-        this.copyToClipboard("decryptedText");
+      .getElementById("copyDecryptedOutputBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("decryptedText", this);
       });
 
     document
@@ -1660,6 +1714,19 @@ class DecryptionController {
         document.getElementById("decryptedText").value = "";
         document.getElementById("signatureInfo").innerHTML = "";
         setVisible(document.getElementById("decryptedOutput"), false);
+        clearStatus(document.getElementById("decryptStatus"));
+      });
+
+    document
+      .getElementById("copyDecryptMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("decryptMessage", this);
+      });
+
+    document
+      .getElementById("clearDecryptMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("decryptMessage").value = "";
         clearStatus(document.getElementById("decryptStatus"));
       });
 
@@ -1800,15 +1867,25 @@ class SigningController {
     this.signBtn = document.getElementById("signBtn");
 
     this.signBtn.addEventListener("click", () => this.sign());
-    document.getElementById("copySignedBtn").addEventListener("click", () => {
-      this.copyToClipboard("signedText");
-    });
 
     document.getElementById("clearSignedBtn").addEventListener("click", () => {
       document.getElementById("signedText").value = "";
       setVisible(document.getElementById("signedOutput"), false);
       clearStatus(document.getElementById("signStatus"));
     });
+
+    document
+      .getElementById("copySignMessageBtn")
+      .addEventListener("click", function () {
+        copyWithFeedback("signMessage", this);
+      });
+
+    document
+      .getElementById("clearSignMessageBtn")
+      .addEventListener("click", () => {
+        document.getElementById("signMessage").value = "";
+        clearStatus(document.getElementById("signStatus"));
+      });
 
     // Trigger sign when Enter is pressed in passphrase field
     document
@@ -1908,12 +1985,20 @@ class VerificationController {
     this.verifyBtn.addEventListener("click", () => this.verify());
 
     document.getElementById("clearVerifyBtn").addEventListener("click", () => {
+      document.getElementById("verifyMessage").value = "";
       document.getElementById("verifyResult").innerHTML = "";
       document.getElementById("verifyMessageText").value = "";
       setVisible(document.getElementById("verifyMessageTextWrapper"), false);
       setVisible(document.getElementById("verifyOutput"), false);
       clearStatus(document.getElementById("verifyStatus"));
     });
+
+    const clearVerifyBtn2 = document.getElementById("clearVerifyBtn2");
+    if (clearVerifyBtn2) {
+      clearVerifyBtn2.addEventListener("click", () => {
+        document.getElementById("clearVerifyBtn").click();
+      });
+    }
   }
 
   /**

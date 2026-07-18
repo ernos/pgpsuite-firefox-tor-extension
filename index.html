@@ -178,6 +178,8 @@
             <textarea id="importKey" rows="4" placeholder="Paste your private or public key here. Importing a private key requires it's passhprase. Use public key importation here to be able to encrypt message to the owner of the private/public key pair."></textarea>
             <button class="copy-btn" data-target="importKey" title="Copy to clipboard">📋</button>
           </div>
+          <button id="copyImportKeyBtn" class="btn btn-secondary" style="margin-top:6px;">Copy To Clipboard</button>
+          <button id="clearImportKeyBtn" class="btn btn-secondary" style="margin-top:6px;">Clear</button>
         </div>
         <div class="form-group">
           <label for="importPassphrase">Passphrase (only for private keys):</label>
@@ -235,6 +237,8 @@
             <textarea id="encryptMessage" rows="6" placeholder="Enter your message here"></textarea>
             <button class="copy-btn" data-target="encryptMessage" title="Copy to clipboard">📋</button>
           </div>
+          <button id="copyEncryptMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Copy To Clipboard</button>
+          <button id="clearEncryptMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Clear</button>
         </div>
         <div class="form-group">
           <label>
@@ -261,7 +265,7 @@
             <textarea id="encryptedText" rows="10" readonly></textarea>
             <button class="copy-btn" data-target="encryptedText" title="Copy to clipboard">📋</button>
           </div>
-          <button id="copyEncryptedBtn" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="copyEncryptedOutputBtn" class="btn btn-secondary">Copy To Clipboard</button>
           <button id="clearEncryptedBtn" class="btn btn-secondary">Clear</button>
         </div>
       </section>
@@ -278,6 +282,8 @@
             <textarea id="decryptMessage" rows="8" placeholder="Paste encrypted message here"></textarea>
             <button class="copy-btn" data-target="decryptMessage" title="Copy to clipboard">📋</button>
           </div>
+          <button id="copyDecryptMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Copy To Clipboard</button>
+          <button id="clearDecryptMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Clear</button>
         </div>
         <div class="form-group">
           <label for="decryptKey">Select Your Private Key:</label>
@@ -315,7 +321,7 @@
             <button class="copy-btn" data-target="decryptedText" title="Copy to clipboard">📋</button>
           </div>
           <div id="signatureInfo" class="signature-info"></div>
-          <button id="copyDecryptedBtn" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="copyDecryptedOutputBtn" class="btn btn-secondary">Copy To Clipboard</button>
           <button id="clearDecryptedBtn" class="btn btn-secondary">Clear</button>
         </div>
       </section>
@@ -332,6 +338,8 @@
             <textarea id="signMessage" rows="6" placeholder="Enter your message here"></textarea>
             <button class="copy-btn" data-target="signMessage" title="Copy to clipboard">📋</button>
           </div>
+          <button id="copySignMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Copy To Clipboard</button>
+          <button id="clearSignMessageBtn" class="btn btn-secondary" style="margin-top:6px;">Clear</button>
         </div>
         <div class="form-group">
           <label for="signKey">Sign message with this private key:</label>
@@ -360,7 +368,6 @@
             <textarea id="signedText" rows="10" readonly></textarea>
             <button class="copy-btn" data-target="signedText" title="Copy to clipboard">📋</button>
           </div>
-          <button id="copySignedBtn" class="btn btn-secondary">Copy to Clipboard</button>
           <button id="clearSignedBtn" class="btn btn-secondary">Clear</button>
         </div>
       </section>
@@ -408,7 +415,7 @@
             <div class="textarea-with-copy">
               <textarea id="verifyMessageText" rows="10" readonly></textarea>
               <button class="copy-btn" data-target="verifyMessageText" title="Copy to clipboard">📋</button>
-              <button id="clearVerifyBtn" class="btn btn-secondary">Clear</button>
+              <button id="clearVerifyBtn2" class="btn btn-secondary">Clear</button>
             </div>
           </div>
         </div>
